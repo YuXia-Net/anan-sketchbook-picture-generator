@@ -6,4 +6,4 @@
 灵感来源来自：MarkCup-Official/Anan-s-Sketchbook-Chat-Box项目，感谢:MarkCup-Official
 
 # 许可证
-本项目不拥有相关素材的版权
+本项目不拥有相关素材的版权，使用MIT协议开源，进行二次开发需要保留项目链接
