@@ -1,0 +1,3120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>安安的举画板表情包生成器</title>
+
+  <!-- 基础 SEO -->
+  <meta name="description" content="夏目安安举画板表情包生成器，支持自定义文字、颜色、字体、滤镜效果，一键生成并保存表情包图片。">
+  <meta name="keywords" content="夏目安安,表情包,生成器,举画板,meme,表情包制作,自定义表情">
+  <meta name="author" content="爱吃香咕的/夏的博客 xiau.net">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#1a1a1a">
+
+  <!-- Open Graph微信/QQ/Discord分享预览-->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="安安的举画板表情包生成器">
+  <meta property="og:description" content="自定义文字、颜色、字体、滤镜，一键生成安安举画板表情包！">
+  <meta property="og:image" content="favicon.ico">
+  <meta property="og:url" content="https://xiau.net">
+  <meta property="og:site_name" content="夏的博客">
+  <meta property="og:locale" content="zh_CN">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="安安的举画板表情包生成器">
+  <meta name="twitter:description" content="自定义文字、颜色、字体、滤镜，一键生成安安举画板表情包！">
+  <meta name="twitter:image" content="favicon.ico">
+
+  <!-- PWA / 移动端 -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="安安表情包">
+  <meta name="application-name" content="安安表情包生成器">
+  <meta name="format-detection" content="telephone=no">
+
+  <link rel="icon" href="favicon.ico">
+
+  <!--只预加载默认字体(Noto Sans SC)，其他字体按需加载 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- 只加载默认必须的字体，减少首屏阻塞 -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
+
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap" as="style"
+    onload="this.onload=null;this.rel='stylesheet';(window._emojiFontCssResolve&&window._emojiFontCssResolve());">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap" rel="stylesheet"></noscript>
+  <script>
+    window.fontsReady = new Promise(function(resolve) {
+      var resolved = false;
+      function done() {
+        if (resolved) return;
+        resolved = true;
+        resolve();
+      }
+      var timeout = setTimeout(done, 4000);
+      function checkBothFonts() {
+        Promise.all([
+          document.fonts.load("16px 'Noto Sans SC'"),
+          document.fonts.load("bold 16px 'Noto Sans SC'"),
+          document.fonts.load("16px 'Noto Color Emoji'")
+        ]).then(function() {
+          return document.fonts.ready;
+        }).then(function() {
+          clearTimeout(timeout);
+          done();
+        }).catch(function() {
+          clearTimeout(timeout);
+          done();
+        });
+      }
+      window._emojiFontCssResolve = checkBothFonts;
+    });
+  </script>
+  <link rel="preload" href="bg.png" as="image" fetchpriority="low">
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Noto Sans SC', 'Noto Color Emoji', sans-serif;
+      padding: 45px 15px 15px 15px;
+      min-height: 100vh;
+      background-color: #1a1a1a;
+      /*背景图延迟渲染，先显示纯色，再加载图片 */
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+    }
+    
+    /* 背景图通过JS异步注入，不阻塞首屏 */
+    body.bg-loaded {
+      background-image: url('bg.png');
+    }
+    
+    .binder-rings {
+      position: relative;
+      max-width: 900px;
+      margin: 0 auto;
+      height: 40px;
+      z-index: 10;
+      pointer-events: none;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 20px;
+    }
+    
+    .ring {
+      position: relative;
+      top: 10px;
+      width: 24px;
+      height: 50px;
+      border: 4px solid #666;
+      border-radius: 50%;
+      background: transparent;
+      box-shadow: inset 2px 2px 4px rgba(0,0,0,0.3), 2px 2px 4px rgba(0,0,0,0.4);
+      flex-shrink: 0;
+    }
+    
+    .ring::before {
+      content: '';
+      position: absolute;
+      top: 50%; left: -4px; right: -4px; bottom: -4px;
+      border: 4px solid #666;
+      border-top: none;
+      border-radius: 0 0 50% 50%;
+      background: linear-gradient(to bottom, #888 0%, #666 100%);
+      z-index: -1;
+    }
+    
+    .ring::after {
+      content: '';
+      position: absolute;
+      top: -4px; left: -4px; right: -4px;
+      height: 50%;
+      border: 4px solid #888;
+      border-bottom: none;
+      border-radius: 50% 50% 0 0;
+      background: linear-gradient(to bottom, #aaa 0%, #888 100%);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .container {
+      position: relative;
+      max-width: 900px;
+      margin: -20px auto 0 auto;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 12px;
+      padding: 25px 12px 12px 12px;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+      border: 2px solid #000;
+      z-index: 5;
+    }
+    
+    h1 {
+      text-align: center;
+      color: #000;
+      margin-bottom: 12px;
+      margin-top: 10px;
+      font-size: clamp(1em, 3.5vw, 1.8em);
+      text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+      word-break: break-word;
+    }
+    
+    .main-layout {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    
+    @media (min-width: 968px) {
+      .main-layout {
+        display: grid;
+        grid-template-columns: 1fr 350px;
+        gap: 20px;
+        align-items: start;
+      }
+    }
+    
+    .preview-section {
+      order: -1;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    @media (min-width: 968px) {
+      .preview-section {
+        order: 0;
+        position: sticky;
+        top: 15px;
+      }
+    }
+    
+    .canvas-wrapper {
+      width: 100%;
+      max-width: 400px;
+      aspect-ratio: 541 / 648;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #f0f0f0;
+      border-radius: 12px;
+      border: 2px solid #000;
+      overflow: hidden;
+    }
+    
+    canvas {
+      max-width: 100%;
+      max-height: 100%;
+      width: auto !important;
+      height: auto !important;
+      display: block;
+      border-radius: 8px;
+    }
+    
+    .preview-controls {
+      width: 100%;
+      max-width: 400px;
+      margin-top: 12px;
+      padding: 12px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border: 2px solid #000;
+    }
+    
+    .preview-control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    
+    .preview-control-label {
+      font-weight: 700;
+      color: #000;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .preview-control-value {
+      color: #000;
+      font-size: 13px;
+      font-weight: bold;
+    }
+    
+    .preview-slider {
+      width: 100%;
+      height: 5px;
+      border-radius: 3px;
+      background: #ccc;
+      outline: none;
+      -webkit-appearance: none;
+    }
+    
+    .preview-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: #333;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .preview-slider::-moz-range-thumb {
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: #333;
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .position-hint {
+      font-size: 11px;
+      color: #333;
+      margin-top: 6px;
+      font-style: italic;
+      text-align: center;
+    }
+    
+    .controls-section {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 12px;
+      border: 2px solid #000;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .control-group {
+      margin-bottom: 10px;
+    }
+    
+    .control-group label {
+      display: block;
+      margin-bottom: 4px;
+      font-weight: 700;
+      color: #000;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    textarea {
+      width: 100%;
+      padding: 8px;
+      border: 2px solid #000;
+      border-radius: 6px;
+      font-size: 14px;
+      resize: vertical;
+      min-height: 60px;
+      max-height: 120px;
+      font-family: inherit;
+      background: #fff;
+      color: #000;
+    }
+    
+    textarea:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(0,0,0,0.1);
+    }
+    
+    select, input[type="number"] {
+      width: 100%;
+      padding: 6px;
+      border: 2px solid #000;
+      border-radius: 6px;
+      font-size: 13px;
+      background: #fff;
+      color: #000;
+      height: 36px;
+      cursor: pointer;
+    }
+    
+    select:focus, input:focus {
+      outline: none;
+    }
+    
+    input[type="color"] {
+      width: 100%;
+      height: 36px;
+      padding: 2px;
+      border: 2px solid #000;
+      border-radius: 6px;
+      background: #fff;
+      cursor: pointer;
+      -webkit-appearance: none;
+    }
+    
+    input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+    input[type="color"]::-webkit-color-swatch { border: none; border-radius: 4px; }
+    
+    .hidden-file-input {
+      position: absolute;
+      left: -9999px;
+    }
+    
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 8px;
+      background: #333;
+      color: #fff;
+      border: 2px solid #333;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      height: 36px;
+      line-height: 18px;
+      text-align: center;
+      font-family: inherit;
+    }
+    
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      background: #555;
+    }
+    
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    
+    .btn.success { background: #2ecc71; border-color: #27ae60; }
+    .btn.error   { background: #e74c3c; border-color: #c0392b; }
+    
+    .btn-large {
+      height: 44px;
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    
+    .row-2col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    
+    .row-2col .control-group { margin-bottom: 0; }
+    
+    .row-3col {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      align-items: end;
+    }
+    
+    .row-3col .control-group { margin-bottom: 0; }
+    
+    .row-3col label {
+      display: block;
+      margin-bottom: 4px;
+      font-weight: 700;
+      color: #000;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .row-3col select, .row-3col input {
+      width: 100%;
+      padding: 6px;
+      border: 2px solid #000;
+      border-radius: 6px;
+      font-size: 13px;
+      background: #fff;
+      color: #000;
+      height: 36px;
+    }
+    
+    .custom-image-box {
+      background: #e9ecef;
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 2px solid #000;
+    }
+    
+    .custom-image-box .box-label {
+      font-weight: 600;
+      margin-bottom: 6px;
+      font-size: 12px;
+    }
+    
+    .custom-image-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 6px;
+      align-items: center;
+    }
+    
+    .custom-image-btn {
+      background: #000;
+      color: #fff;
+      border: 2px solid #000;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 12px;
+      transition: all 0.2s;
+      height: 36px;
+      font-family: inherit;
+    }
+    
+    .custom-image-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+    
+    .image-filename {
+      font-size: 11px;
+      color: #555;
+      margin-top: 4px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    
+    .image-layout-box {
+      margin-top: 10px;
+      padding: 10px;
+      background: rgba(0,0,0,0.05);
+      border-radius: 6px;
+      border: 1px solid rgba(0,0,0,0.1);
+    }
+    
+    .zoom-input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    
+    .zoom-input-wrapper input {
+      width: 100%;
+      padding-right: 20px;
+      text-align: center;
+      font-weight: 600;
+    }
+    
+    .zoom-percent {
+      position: absolute;
+      right: 6px;
+      color: #666;
+      font-size: 12px;
+      pointer-events: none;
+    }
+    
+    .filter-box {
+      background: #e9ecef;
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 2px solid #000;
+    }
+    
+    .filter-box .box-label {
+      font-weight: 600;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      user-select: none;
+      margin-bottom: 0;
+    }
+    
+    .filter-box .box-label:hover { opacity: 0.75; }
+    
+    .filter-toggle-arrow {
+      font-size: 10px;
+      transition: transform 0.2s;
+      display: inline-block;
+    }
+    
+    .filter-box.open .filter-toggle-arrow { transform: rotate(180deg); }
+    
+    .filter-body {
+      display: none;
+      margin-top: 8px;
+    }
+    
+    .filter-box.open .filter-body { display: block; }
+    
+    .changelog-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+    }
+    
+    .changelog-modal.show { display: flex; }
+    
+    .changelog-content {
+      background: #fff;
+      border-radius: 12px;
+      padding: 15px;
+      max-width: 460px;
+      width: 100%;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+      border: 2px solid #000;
+    }
+    
+    .changelog-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #000;
+    }
+    
+    .changelog-title { font-size: 15px; font-weight: 700; color: #000; }
+    
+    .changelog-close {
+      background: none;
+      border: none;
+      font-size: 22px;
+      cursor: pointer;
+      color: #000;
+      width: 28px; height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: background 0.2s;
+    }
+    
+    .changelog-close:hover { background: #f0f0f0; }
+    
+    .changelog-version {
+      margin-bottom: 14px;
+    }
+    
+    .changelog-version-title {
+      font-weight: 700;
+      font-size: 13px;
+      color: #000;
+      margin-bottom: 5px;
+      padding-bottom: 3px;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    .changelog-version ul {
+      padding-left: 16px;
+      font-size: 12px;
+      color: #333;
+      line-height: 1.9;
+    }
+    
+    .welcome-box {
+      background: #fff;
+      padding: 8px 10px;
+      border-radius: 4px;
+      margin-top: 10px;
+      font-size: 13px;
+      color: #000;
+      border: 2px solid #000;
+      text-align: center;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    
+    .changelog-inline-btn {
+      background: #000;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: opacity 0.2s;
+      white-space: nowrap;
+    }
+    
+    .changelog-inline-btn:hover { opacity: 0.75; }
+    
+    .filter-presets {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5px;
+      margin-bottom: 8px;
+    }
+    
+    .filter-preset-btn {
+      padding: 6px 4px;
+      background: #fff;
+      border: 2px solid #000;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 11px;
+      text-align: center;
+      font-weight: 600;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+    
+    .filter-preset-btn:hover { background: #eee; transform: translateY(-1px); }
+    .filter-preset-btn.active { background: #333; color: #fff; }
+    
+    .filter-slider-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 5px;
+    }
+    
+    .filter-slider-row label {
+      font-size: 11px;
+      font-weight: 700;
+      min-width: 42px;
+      color: #000;
+      text-transform: uppercase;
+    }
+    
+    .filter-slider-row input[type="range"] {
+      flex: 1;
+      height: 4px;
+      border-radius: 3px;
+      background: #ccc;
+      outline: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+    }
+    
+    .filter-slider-row input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: #333;
+      cursor: pointer;
+    }
+    
+    .filter-slider-row span {
+      font-size: 11px;
+      font-weight: 700;
+      min-width: 28px;
+      text-align: right;
+    }
+    
+    .warning-box {
+      background: #fff;
+      padding: 8px;
+      border-radius: 4px;
+      margin-bottom: 10px;
+      font-size: 12px;
+      color: #000;
+      display: none;
+      border: 2px solid #000;
+    }
+    
+    .warning-box.show { display: block; }
+    
+    .settings-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    
+    .long-press-hint {
+      display: none;
+      font-size: 11px;
+      color: #f10000;
+      text-align: center;
+      margin-top: 4px;
+    }
+    
+    .undo-redo-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    
+    .loading-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1001;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .loading-overlay.show { display: flex; }
+    
+    .loading-content {
+      background: #fff;
+      padding: 20px 40px;
+      border-radius: 12px;
+      border: 2px solid #000;
+      text-align: center;
+    }
+    
+    .spinner {
+      display: inline-block;
+      width: 24px; height: 24px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #333;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 10px;
+    }
+    
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    .effect-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+    }
+    
+    .effect-modal.show { display: flex; }
+    
+    .effect-content {
+      background: #fff;
+      border-radius: 12px;
+      padding: 15px;
+      max-width: 480px;
+      width: 100%;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+      border: 2px solid #000;
+    }
+    
+    .effect-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #000;
+    }
+    
+    .effect-title { font-size: 16px; font-weight: 700; color: #000; }
+    
+    .effect-close {
+      background: none;
+      border: none;
+      font-size: 22px;
+      cursor: pointer;
+      color: #000;
+      width: 28px; height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: background 0.2s;
+    }
+    
+    .effect-close:hover { background: #f0f0f0; }
+    
+    .effect-section { margin-bottom: 15px; }
+    
+    .effect-section-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #000;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .effect-tip {
+      background: #f8f9fa;
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      color: #555;
+      line-height: 1.8;
+      margin-bottom: 14px;
+      border: 1px solid #e0e0e0;
+    }
+    
+    .effect-tip code {
+      display: block;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 6px 8px;
+      font-family: monospace;
+      margin-top: 6px;
+      font-size: 11px;
+    }
+    
+    .effect-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+    
+    .effect-item {
+      padding: 8px 4px;
+      background: #fff;
+      border: 2px solid #000;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 11px;
+      text-align: center;
+      transition: all 0.2s;
+      color: #000;
+      font-family: inherit;
+      font-weight: 600;
+    }
+    
+    .effect-item:hover { background: #f0f0f0; transform: translateY(-2px); }
+    
+    .color-red    { border-left: 4px solid #e74c3c; color: #e74c3c; }
+    .color-orange { border-left: 4px solid #e67e22; color: #e67e22; }
+    .color-yellow { border-left: 4px solid #c9a000; color: #c9a000; }
+    .color-green  { border-left: 4px solid #27ae60; color: #27ae60; }
+    .color-cyan   { border-left: 4px solid #16a085; color: #16a085; }
+    .color-blue   { border-left: 4px solid #2980b9; color: #2980b9; }
+    .color-purple { border-left: 4px solid #8e44ad; color: #8e44ad; }
+    .color-pink   { border-left: 4px solid #e91e8c; color: #e91e8c; }
+    .color-gray   { border-left: 4px solid #7f8c8d; color: #7f8c8d; }
+    .color-black  { border-left: 4px solid #111; color: #111; }
+    .color-brown  { border-left: 4px solid #7d3c0a; color: #7d3c0a; }
+    
+    .style-strike    { text-decoration: line-through; }
+    .style-underline { text-decoration: underline; }
+    .style-bold      { font-weight: 900; }
+    .style-italic    { font-style: italic; }
+    .style-magic     { background: #8e44ad; color: #fff; border-color: #8e44ad; }
+    .style-shadow    { text-shadow: 2px 2px 4px rgba(0,0,0,0.6); }
+    .style-gradient  {
+      background: linear-gradient(90deg, #e74c3c, #f39c12, #27ae60, #2980b9, #8e44ad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      border-left: 4px solid #8e44ad;
+    }
+    .style-outline   { -webkit-text-stroke: 1.5px #000; color: rgba(0,0,0,0.08); }
+    .style-bigger    { font-size: 14px; font-weight: 900; }
+    .style-smaller   { font-size: 9px; }
+    
+    .preset-item {
+      padding: 7px 8px;
+      background: #fff;
+      border: 2px solid #000;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 11px;
+      text-align: left;
+      transition: all 0.2s;
+      color: #000;
+      font-family: inherit;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+    
+    .preset-item:hover { background: #f0f0f0; transform: translateY(-1px); }
+    
+    .preset-item .preset-name {
+      font-weight: 700;
+      font-size: 12px;
+      margin-bottom: 2px;
+    }
+    
+    .preset-item .preset-preview {
+      font-size: 10px;
+      color: #666;
+      font-weight: 400;
+    }
+    
+    .preset-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
+    }
+    
+    .mobile-warning {
+      display: none;
+      margin-top: 10px;
+      padding: 10px;
+      background: #fff3f3;
+      border: 2px solid #e74c3c;
+      border-radius: 8px;
+      color: #c0392b;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+    
+    @media (max-width: 600px) {
+      body { padding: 45px 8px 8px 8px; }
+      .container { padding: 20px 10px 10px 10px; margin-top: -15px; }
+      .controls-section { padding: 12px; }
+      .ring { width: 18px; height: 40px; border-width: 3px; }
+      .ring::before, .ring::after { border-width: 3px; }
+      .binder-rings { padding: 0 10px; }
+      .row-3col { gap: 4px; }
+      .row-3col label { font-size: 9px; }
+      .row-3col select, .row-3col input { font-size: 12px; padding: 4px; height: 32px; }
+    }
+    
+    @media (max-width: 320px) {
+      .custom-image-row { grid-template-columns: 1fr; }
+    }
+    
+    .focus-mode-row {
+      width: 100%;
+      max-width: 400px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+      padding: 6px 10px;
+      background: #fff;
+      border: 2px solid #000;
+      border-radius: 6px;
+      cursor: pointer;
+      user-select: none;
+    }
+    
+    .focus-mode-row:hover { background: #f5f5f5; }
+    
+    .focus-mode-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #000;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .focus-mode-toggle {
+      position: relative;
+      width: 40px;
+      height: 22px;
+      background: #ccc;
+      border-radius: 11px;
+      flex-shrink: 0;
+      transition: background 0.2s;
+    }
+    
+    .focus-mode-toggle::after {
+      content: '';
+      position: absolute;
+      top: 3px; left: 3px;
+      width: 16px; height: 16px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    
+    body.focus-mode .focus-mode-toggle {
+      background: #333;
+    }
+    body.focus-mode .focus-mode-toggle::after {
+      transform: translateX(18px);
+    }
+    
+    body.focus-mode .focus-hide {
+      display: none !important;
+    }
+    
+    body.focus-mode #textInput {
+      min-height: 260px;
+      max-height: 600px;
+    }
+
+    .install-banner {
+      display: none;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      z-index: 2000;
+      padding: 12px 16px;
+      background: rgba(15, 15, 15, 0.97);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-top: 2px solid rgba(255,255,255,0.12);
+      box-shadow: 0 -6px 30px rgba(0,0,0,0.6);
+      animation: slideUpBanner 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+    .install-banner.show { display: block; }
+    @keyframes slideUpBanner {
+      from { transform: translateY(110%); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+    .install-banner-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .install-banner-icon { font-size: 30px; flex-shrink: 0; line-height: 1; }
+    .install-banner-text { flex: 1; min-width: 160px; }
+    .install-banner-title { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 2px; }
+    .install-banner-desc { font-size: 11px; color: rgba(255,255,255,0.55); line-height: 1.4; }
+    .install-banner-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+    .install-btn-primary {
+      background: #fff; color: #000; border: none; border-radius: 20px;
+      padding: 8px 18px; font-size: 12px; font-weight: 700; cursor: pointer;
+      font-family: inherit; transition: all 0.2s; white-space: nowrap;
+    }
+    .install-btn-primary:hover { background: #ddd; transform: scale(1.04); }
+    .install-btn-dismiss {
+      background: transparent; color: rgba(255,255,255,0.45);
+      border: 1px solid rgba(255,255,255,0.18); border-radius: 20px;
+      padding: 8px 14px; font-size: 12px; font-weight: 600; cursor: pointer;
+      font-family: inherit; transition: all 0.2s; white-space: nowrap;
+    }
+    .install-btn-dismiss:hover { color: #fff; border-color: rgba(255,255,255,0.45); }
+    .ios-install-modal {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65);
+      z-index: 2100; align-items: flex-end; justify-content: center; padding: 0 12px 24px;
+    }
+    .ios-install-modal.show { display: flex; }
+    .ios-install-content {
+      background: #1c1c1e; border-radius: 18px; padding: 22px; width: 100%; max-width: 420px;
+      border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 -8px 40px rgba(0,0,0,0.7);
+      animation: slideUpBanner 0.35s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+    .ios-install-title { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+    .ios-install-steps { list-style: none; padding: 0; margin: 0 0 18px; }
+    .ios-install-steps li {
+      font-size: 13px; color: rgba(255,255,255,0.8); padding: 8px 0;
+      display: flex; align-items: flex-start; gap: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.07); line-height: 1.5;
+    }
+    .ios-install-steps li:last-child { border-bottom: none; }
+    .ios-step-num {
+      background: rgba(255,255,255,0.13); border-radius: 50%; width: 22px; height: 22px;
+      min-width: 22px; display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0; margin-top: 1px;
+    }
+    .ios-install-close {
+      width: 100%; background: rgba(255,255,255,0.1); color: #fff; border: none;
+      border-radius: 12px; padding: 13px; font-size: 14px; font-weight: 600;
+      cursor: pointer; font-family: inherit; transition: background 0.2s;
+    }
+    .ios-install-close:hover { background: rgba(255,255,255,0.18); }
+
+    .font-preview {
+      font-size: 11px;
+      color: #666;
+      margin-top: 4px;
+      padding: 6px 8px;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      line-height: 1.6;
+    }
+
+    /*Canvas 骨架屏，图片未加载时显示占位 */
+    .canvas-wrapper.loading::after {
+      content: '加载中...';
+      position: absolute;
+      color: #999;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="binder-rings">
+    <div class="ring"></div>
+    <div class="ring"></div>
+    <div class="ring"></div>
+    <div class="ring"></div>
+    <div class="ring"></div>
+    <div class="ring"></div>
+    <div class="ring"></div>
+    <div class="ring"></div>
+  </div>
+
+  <div class="loading-overlay" id="globalLoading">
+    <div class="loading-content">
+      <div class="spinner"></div>
+      <div id="loadingText">处理中...</div>
+    </div>
+  </div>
+
+  <div class="container">
+    <h1>🎨 安安举画板表情包生成器</h1>
+
+    <div class="main-layout">
+
+      <div class="preview-section">
+        <div class="filter-box" id="filterBox" style="width:100%;max-width:400px;margin-bottom:8px;">
+          <div class="box-label" id="filterToggle">
+            <span>🎨 图片滤镜</span>
+            <span class="filter-toggle-arrow">▼</span>
+          </div>
+          <div class="filter-body">
+            <div class="filter-presets">
+              <button class="filter-preset-btn active" data-filter="none">原图</button>
+              <button class="filter-preset-btn" data-filter="grayscale">灰度</button>
+              <button class="filter-preset-btn" data-filter="sepia">复古</button>
+              <button class="filter-preset-btn" data-filter="warm">暖色</button>
+              <button class="filter-preset-btn" data-filter="cool">冷色</button>
+              <button class="filter-preset-btn" data-filter="vivid">鲜艳</button>
+            </div>
+            <div class="filter-slider-row">
+              <label>亮度</label>
+              <input type="range" id="filterBrightness" min="50" max="150" value="100">
+              <span id="brightnessValue">100</span>
+            </div>
+            <div class="filter-slider-row">
+              <label>对比度</label>
+              <input type="range" id="filterContrast" min="50" max="200" value="100">
+              <span id="contrastValue">100</span>
+            </div>
+            <div class="filter-slider-row">
+              <label>饱和度</label>
+              <input type="range" id="filterSaturate" min="0" max="300" value="100">
+              <span id="saturateValue">100</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="focus-mode-row" id="focusModeRow">
+          <span class="focus-mode-label">📝 纯文本编辑模式</span>
+          <div class="focus-mode-toggle" id="focusModeToggle"></div>
+        </div>
+        
+        <div class="canvas-wrapper" id="canvasWrapper">
+          <canvas id="canvas" width="541" height="648"></canvas>
+        </div>
+
+        <div class="preview-controls">
+          <div class="preview-control-group">
+            <div class="preview-control-label">
+              <span>文字垂直位置</span>
+              <span class="preview-control-value" id="posYDisplay">464</span>
+            </div>
+            <input type="range" id="posY" min="464" max="627" value="464" class="preview-slider">
+            <div class="position-hint">越大越靠下</div>
+          </div>
+          <div class="preview-control-group" id="imagePosYGroup" style="display: none; margin-top: 10px;">
+            <div class="preview-control-label">
+              <span>图片垂直位置</span>
+              <span class="preview-control-value" id="imagePosYDisplay">-22</span>
+            </div>
+            <input type="range" id="imagePosY" min="-100" max="-22" value="-22" class="preview-slider">
+            <div class="position-hint">调整图片上下位置</div>
+          </div>
+        </div>
+
+        <div class="undo-redo-row" style="margin-top: 10px; width: 100%; max-width: 400px;">
+          <button class="btn" id="undoBtn" disabled>↩ 撤销 (Ctrl+Z)</button>
+          <button class="btn" id="redoBtn" disabled>↪ 重做 (Ctrl+Y)</button>
+        </div>
+      </div>
+
+      <div class="controls-section">
+
+        <div class="row-2col">
+          <button class="btn" id="effectBtn">✨ 自定义文字效果</button>
+          <button class="btn" id="presetBtn">📋 预设文字(有更新)</button>
+        </div>
+
+        <div class="control-group">
+          <label>输入文字内容 (支持 Emoji)</label>
+          <textarea id="textInput" placeholder="在这里输入你想显示在画板上的文字..."></textarea>
+        </div>
+
+        <div class="settings-row">
+          <button class="btn" id="saveSettingsBtn">💾 保存文字和设置</button>
+          <button class="btn" id="resetSettingsBtn">🔄 长按清空保存项</button>
+        </div>
+        <div class="long-press-hint" id="longPressHint">准备恢复默认设置/文字...</div>
+
+        <div class="control-group">
+          <label>选择表情</label>
+          <select id="emotionSelect">
+            <option value="开心.png">😊 开心的吾辈</option>
+            <option value="闭眼.png">😌 闭眼的吾辈</option>
+            <option value="病娇.png">🥰 病娇的吾辈</option>
+            <option value="害怕.png">😰 害怕的吾辈</option>
+            <option value="激动.png">🤩 激动的吾辈</option>
+            <option value="惊讶.png">😲 惊讶的吾辈</option>
+            <option value="哭泣.png">😭 哭泣的吾辈</option>
+            <option value="脸红.png">😳 脸红的吾辈</option>
+            <option value="难受.png">😣 难受的吾辈</option>
+            <option value="生气.png">😠 生气的吾辈</option>
+            <option value="无表情.png">😐 无表情的吾辈</option>
+            <option value="无语.png">😑 无语的吾辈</option>
+            <option value="custom">➕ 自定义图片...</option>
+          </select>
+          <input type="file" id="customEmotionInput" class="hidden-file-input" accept="image/*">
+        </div>
+
+        <div class="custom-image-box focus-hide">
+          <div class="box-label">🖼️ 自定义画板图片</div>
+          <div class="custom-image-row">
+            <button class="custom-image-btn" id="addImageBtn">➕ 添加图片</button>
+            <button class="custom-image-btn" id="removeImageBtn" style="display: none;">🗑️ 移除</button>
+          </div>
+          <div class="image-filename" id="imageFilename">未添加图片</div>
+          <div class="image-layout-box" id="imageLayoutBox" style="display: none;">
+            <div class="row-3col">
+              <div class="control-group">
+                <label>图片对齐</label>
+                <select id="imageAlign">
+                  <option value="center">居中</option>
+                  <option value="left">靠左</option>
+                  <option value="right">靠右</option>
+                </select>
+              </div>
+              <div class="control-group">
+                <label>文字位置</label>
+                <select id="textPosition">
+                  <option value="top">上方</option>
+                  <option value="bottom">下方</option>
+                  <option value="left">左侧</option>
+                  <option value="right">右侧</option>
+                </select>
+              </div>
+              <div class="control-group">
+                <label>图片大小</label>
+                <div class="zoom-input-wrapper">
+                  <input type="number" id="zoomInput" value="100" min="20" max="200">
+                  <span class="zoom-percent">%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <input type="file" id="customImageInput" class="hidden-file-input" accept="image/*">
+        </div>
+
+        <div class="warning-box focus-hide" id="overflowWarning">⚠️ 文字内容可能超出画板空间，建议修改字号和行间距</div>
+
+        <div class="control-group">
+          <label>字体选择</label>
+          <select id="fontFamily">
+            <option value="'Noto Sans SC', 'Noto Color Emoji', sans-serif">默认字体 (Noto Sans SC)</option>
+            <optgroup label="🌸 可爱手写字体">
+              <option value="'ZCOOL KuaiLe', 'Noto Color Emoji', cursive">🎉 站酷快乐体（圆润可爱）</option>
+              <option value="'Ma Shan Zheng', 'Noto Color Emoji', cursive">✍️ 马善政毛笔楷体（手写感）</option>
+              <option value="'Long Cang', 'Noto Color Emoji', cursive">🖋️ 龙藏体（潦草手写）</option>
+              <option value="'Zhi Mang Xing', 'Noto Color Emoji', cursive">🌊 知芒行（飘逸行草）</option>
+              <option value="'Liu Jian Mao Cao', 'Noto Color Emoji', cursive">🐱 流墨毛草（狂野草书）</option>
+            </optgroup>
+            <optgroup label="📖 文艺衬线字体">
+              <option value="'ZCOOL XiaoWei', 'Noto Color Emoji', serif">🌸 站酷小薇体（清秀文艺）</option>
+              <option value="'SimSun', 'Noto Color Emoji', serif">宋体</option>
+              <option value="'KaiTi', 'Noto Color Emoji', serif">楷体</option>
+            </optgroup>
+            <optgroup label="🖥️ 系统字体">
+              <option value="Arial, 'Noto Color Emoji', sans-serif">Arial</option>
+              <option value="'Microsoft YaHei', 'Noto Color Emoji', sans-serif">微软雅黑</option>
+              <option value="'SimHei', 'Noto Color Emoji', sans-serif">黑体</option>
+            </optgroup>
+            <option value="custom">➕ 自定义字体...</option>
+          </select>
+          <div class="font-preview" id="fontPreview">预览：糯米？!樱桃？！柠檬？！～ 🍬✨</div>
+          <input type="file" id="customFontInput" class="hidden-file-input" accept=".ttf,.otf,.woff,.woff2">
+        </div>
+
+        <div class="row-3col">
+          <div class="control-group">
+            <label>字体大小 (px)</label>
+            <input type="number" id="fontSize" value="32" min="8" max="120" step="1">
+          </div>
+          <div class="control-group">
+            <label>行间距 (倍数)</label>
+            <input type="number" id="lineHeight" value="1.0" min="1.0" max="3.0" step="0.1">
+          </div>
+          <div class="control-group">
+            <label>默认字体颜色</label>
+            <input type="color" id="fontColor" value="#2c3e50">
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label>文字对齐</label>
+          <select id="textAlign">
+            <option value="center">居中</option>
+            <option value="left">左对齐</option>
+            <option value="right">右对齐</option>
+          </select>
+        </div>
+
+        <div class="row-2col">
+          <button class="btn btn-large" id="downloadBtn">⬇️ 保存图片</button>
+          <button class="btn btn-large" id="copyBtn">📋 复制到剪贴板</button>
+        </div>
+
+        <div class="mobile-warning focus-hide" id="mobileWarning">
+          ⚠️ 你好像在使用手机/移动平台喵<br>
+          手机/移动平台的有些软件是不支持从粘贴板粘贴图片的，就比如手机QQ就不行，但是手机微信就可以，这是软件官方不支持我也没办法，对于不支持的手机软件，你可以保存图片手动发送，电脑的软件都支持
+        </div>
+
+        <div class="welcome-box">
+          <span>😋 香咕真的很好吃</span>
+          <button class="changelog-inline-btn" id="changelogBtn">📝 更新日志</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="effect-modal" id="effectModal">
+    <div class="effect-content">
+      <div class="effect-header">
+        <span class="effect-title">✨ 自定义文字效果</span>
+        <button class="effect-close" id="effectClose">×</button>
+      </div>
+
+      <div class="effect-tip">
+        💡 选中文字之后，点击自定义文字效果，点击你需要的标签，即可为这段文字附着上效果。效果可叠加：<br>
+        <code>[红色开始][删除线开始]<span style="color:#e74c3c;text-decoration:line-through;">红色删除线</span>[删除线结束][红色结束]</code>
+      </div>
+
+      <div class="effect-section">
+        <div class="effect-section-title">🎨 颜色效果</div>
+        <div class="effect-grid">
+          <div class="effect-item color-red"    data-start="[红色开始]"   data-end="[红色结束]">红色文字</div>
+          <div class="effect-item color-orange" data-start="[橙色开始]"   data-end="[橙色结束]">橙色文字</div>
+          <div class="effect-item color-yellow" data-start="[黄色开始]"   data-end="[黄色结束]">黄色文字</div>
+          <div class="effect-item color-green"  data-start="[绿色开始]"   data-end="[绿色结束]">绿色文字</div>
+          <div class="effect-item color-cyan"   data-start="[青色开始]"   data-end="[青色结束]">青色文字</div>
+          <div class="effect-item color-blue"   data-start="[蓝色开始]"   data-end="[蓝色结束]">蓝色文字</div>
+          <div class="effect-item color-purple" data-start="[紫色开始]"   data-end="[紫色结束]">紫色文字</div>
+          <div class="effect-item color-pink"   data-start="[粉色开始]"   data-end="[粉色结束]">粉色文字</div>
+          <div class="effect-item color-gray"   data-start="[灰色开始]"   data-end="[灰色结束]">灰色文字</div>
+          <div class="effect-item color-black"  data-start="[黑色开始]"   data-end="[黑色结束]">黑色文字</div>
+          <div class="effect-item color-brown"  data-start="[棕色开始]"   data-end="[棕色结束]">棕色文字</div>
+        </div>
+      </div>
+
+      <div class="effect-section">
+        <div class="effect-section-title">✏️ 文字样式</div>
+        <div class="effect-grid">
+          <div class="effect-item style-strike"    data-start="[删除线开始]"   data-end="[删除线结束]">删除线</div>
+          <div class="effect-item style-underline" data-start="[下划线开始]"   data-end="[下划线结束]">下划线</div>
+          <div class="effect-item style-italic"    data-start="[斜体开始]"     data-end="[斜体结束]">斜体字</div>
+          <div class="effect-item style-bold"      data-start="[粗体开始]"     data-end="[粗体结束]">粗体字</div>
+          <div class="effect-item style-magic"     data-start="[洗脑魔法开始]" data-end="[洗脑魔法结束]">洗脑魔法</div>
+          <div class="effect-item style-shadow"    data-start="[阴影开始]"     data-end="[阴影结束]">文字阴影</div>
+          <div class="effect-item style-gradient"  data-start="[渐变开始]"     data-end="[渐变结束]">彩虹渐变</div>
+          <div class="effect-item style-outline"   data-start="[描边开始]"     data-end="[描边结束]">文字描边</div>
+          <div class="effect-item" data-start="[左右镜像开始]" data-end="[左右镜像结束]">↔ 左右镜像</div>
+          <div class="effect-item" data-start="[上下镜像开始]" data-end="[上下镜像结束]">↕ 上下镜像</div>
+        </div>
+      </div>
+
+      <div class="effect-section">
+        <div class="effect-section-title">🔃 文字旋转角度</div>
+        <div class="effect-grid">
+          <div class="effect-item" data-param-type="旋转" data-param-default="45">🔃 设置旋转角度</div>
+        </div>
+      </div>
+
+      <div class="effect-section">
+        <div class="effect-section-title">↔ 文字偏移</div>
+        <div class="effect-grid">
+          <div class="effect-item" data-param-type="偏移" data-param-default="20">↔ 设置文字偏移</div>
+        </div>
+      </div>
+
+      <div class="effect-section">
+        <div class="effect-section-title">🔡 字体大小 / 字体粗细</div>
+        <div class="effect-grid">
+          <div class="effect-item" data-param-type="文字大小" data-param-default="32">设置字体大小</div>
+          <div class="effect-item" data-param-type="文字粗细" data-param-default="700">设置字体粗细</div>
+        </div>
+        <div style="font-size:11px;color:#555;margin-top:8px;line-height:1.9;background:#f8f9fa;padding:8px 10px;border-radius:6px;border:1px solid #e0e0e0;">
+          💡 <strong>字体大小和字体粗细的参数说明</strong>：<br>
+          · 字体大小建议 <code style="background:#fff;padding:1px 4px;border-radius:3px;">10</code> ~ <code style="background:#fff;padding:1px 4px;border-radius:3px;">120</code>，数字越大字越大<br>
+          · 字体粗细范围 <code style="background:#fff;padding:1px 4px;border-radius:3px;">100</code>（最细）~ <code style="background:#fff;padding:1px 4px;border-radius:3px;">900</code>（最粗），通常用 100 的倍数
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="effect-modal" id="paramModal">
+    <div class="effect-content" style="max-width:360px;">
+      <div class="effect-header">
+        <span class="effect-title" id="paramModalTitle">设置参数</span>
+        <button class="effect-close" id="paramModalClose">×</button>
+      </div>
+
+      <div style="margin-bottom:12px;">
+        <div style="font-size:11px;font-weight:700;color:#000;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">已选文字</div>
+        <div id="paramSelectedText" style="background:#f8f9fa;border:1px solid #ddd;border-radius:6px;padding:8px 10px;font-size:13px;color:#333;min-height:32px;word-break:break-all;line-height:1.6;max-height:80px;overflow-y:auto;"></div>
+      </div>
+
+      <div id="paramDirectionGroup" style="display:none;margin-bottom:14px;">
+        <div id="paramDirectionLabel" style="font-size:11px;font-weight:700;color:#000;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;"></div>
+        <div id="paramDirectionBtns" style="display:grid;gap:8px;"></div>
+      </div>
+
+      <div style="margin-bottom:16px;">
+        <label id="paramInputLabel" style="display:block;font-size:11px;font-weight:700;color:#000;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;"></label>
+        <input id="paramInputValue" type="number" style="width:100%;padding:8px;border:2px solid #000;border-radius:6px;font-size:15px;font-family:inherit;background:#fff;color:#000;outline:none;" />
+        <div id="paramInputHint" style="font-size:11px;color:#666;margin-top:5px;line-height:1.6;"></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <button class="btn" id="paramModalCancel">取消</button>
+        <button class="btn" id="paramModalConfirm" style="background:#333;color:#fff;">确认应用</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="effect-modal" id="presetModal">
+    <div class="effect-content">
+      <div class="effect-header">
+        <span class="effect-title">📋 快捷预设文字</span>
+        <button class="effect-close" id="presetClose">×</button>
+      </div>
+      <div style="font-size: 11px; color: #666; margin-bottom: 10px; line-height: 1.6;">
+        💡 点击预设会将文字<strong>追加</strong>到现有内容后面
+      </div>
+      <div class="preset-grid" id="presetGrid">
+      </div>
+    </div>
+  </div>
+
+  <div class="changelog-modal" id="changelogModal">
+    <div class="changelog-content">
+      <div class="changelog-header">
+        <span class="changelog-title">📝 更新日志</span>
+        <button class="changelog-close" id="changelogClose">×</button>
+      </div>
+
+      <div class="changelog-version">
+        <div class="changelog-version-title">V1.4Beta · 2026.3.10</div>
+        <ul>
+          <li>新增文字旋转角度标签 [旋转=角度开始]，支持任意角度顺/逆时针旋转</li>
+          <li>镜像标签拆分为 [左右镜像开始] 和 [上下镜像开始]，方向更清晰</li>
+          <li>新增 Emoji 字体加载完成检测机制，确保首次渲染时 Emoji 正确显示</li>
+        </ul>
+      </div>
+
+      <div class="changelog-version">
+        <div class="changelog-version-title">V1.4Beta · 2026.3.10</div>
+        <ul>
+          <li>快捷预设文字</li>
+          <li>图片滤镜</li>
+          <li>保存图片/复制剪贴板按钮统一大小</li>
+          <li>增加字体大小/粗细标签标签,由B站@残玥の交响曲提出</li>
+          <li>新增更新日志入口</li>
+          <li>优化移动端按钮尺寸和排布</li>
+          <li>新增可爱手写字体：站酷快乐体、马善政毛笔楷体、龙藏体、知芒行、流墨毛草、站酷小薇体</li>
+          <li>字体选择增加分组和实时预览</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="install-banner" id="installBanner">
+    <div class="install-banner-inner">
+      <div class="install-banner-icon">🎨</div>
+      <div class="install-banner-text">
+        <div class="install-banner-title">想把安安表情包生成器添加到桌面吗？</div>
+        <div class="install-banner-desc">像 App 一样随时打开，方便又快捷！</div>
+      </div>
+      <div class="install-banner-actions">
+        <button class="install-btn-primary" id="installBtn">📲 添加到桌面</button>
+        <button class="install-btn-dismiss" id="installDismiss">以后再说</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="ios-install-modal" id="iosInstallModal">
+    <div class="ios-install-content">
+      <div class="ios-install-title">📲 添加到 iPhone / iPad 桌面</div>
+      <ul class="ios-install-steps">
+        <li><div class="ios-step-num">1</div><span>点击底部工具栏中间的 <strong>分享</strong> 按钮（方框加向上箭头的图标）</span></li>
+        <li><div class="ios-step-num">2</div><span>在弹出菜单中向下滑动，找到 <strong>「添加到主屏幕」</strong> 并点击</span></li>
+        <li><div class="ios-step-num">3</div><span>确认名称后，点击右上角 <strong>「添加」</strong> 即可完成！</span></li>
+      </ul>
+      <button class="ios-install-close" id="iosInstallClose">好的，我去试试！</button>
+    </div>
+  </div>
+
+  <div style="text-align: center; padding: 15px; color: #fff; font-size: 12px; line-height: 1.8; margin-top: 10px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">
+    此网页由<a href="https://xiau.net" target="_blank" style="color:#fff; font-weight:bold;">夏的博客</a>开发，
+    感谢项目：<a href="https://github.com/MarkCup-Official/Anan-s-Sketchbook-Chat-Box" target="_blank" style="color:#fff;">Anan-s-Sketchbook-Chat-Box</a><br>
+    网页版本 V1.4Beta.2026.3.6，背景来自游戏：梦灯花
+  </div>
+
+<script>
+  // ============================================================
+  // 背景图异步加载，不阻塞首屏渲染
+  // ============================================================
+  (function loadBgAsync() {
+    const img = new Image();
+    img.onload = () => document.body.classList.add('bg-loaded');
+    img.src = 'bg.png';
+  })();
+
+  const StorageManager = {
+    KEY: 'ananMemeSettings',
+
+    getDefaults() {
+      return {
+        text: '',
+        fontFamily: "'Noto Sans SC', 'Noto Color Emoji', sans-serif",
+        fontColor: '#2c3e50',
+        textAlign: 'center',
+        fontSize: '32',
+        lineHeight: '1.0',
+        posY: '464',
+        emotion: '开心.png',
+        filterPreset: 'none',
+        filterBrightness: 100,
+        filterContrast: 100,
+        filterSaturate: 100
+      };
+    },
+
+    save(data) {
+      try {
+        localStorage.setItem(this.KEY, JSON.stringify({ ...data, savedAt: Date.now() }));
+        return true;
+      } catch (e) {
+        console.error('保存设置失败:', e);
+        return false;
+      }
+    },
+
+    load() {
+      try {
+        const saved = localStorage.getItem(this.KEY);
+        if (!saved) return this.getDefaults();
+        return { ...this.getDefaults(), ...JSON.parse(saved) };
+      } catch (e) {
+        return this.getDefaults();
+      }
+    },
+
+    clear() {
+      try { localStorage.removeItem(this.KEY); } catch (e) {}
+    }
+  };
+
+  class UndoHistory {
+    constructor(maxSize = 50) {
+      this.stack = [];
+      this.index = -1;
+      this.maxSize = maxSize;
+    }
+
+    push(value) {
+      if (this.index >= 0 && this.stack[this.index] === value) return;
+      this.stack.splice(this.index + 1);
+      this.stack.push(value);
+      if (this.stack.length > this.maxSize) this.stack.shift();
+      this.index = this.stack.length - 1;
+    }
+
+    undo() { return this.index > 0 ? this.stack[--this.index] : null; }
+    redo() { return this.index < this.stack.length - 1 ? this.stack[++this.index] : null; }
+    canUndo() { return this.index > 0; }
+    canRedo() { return this.index < this.stack.length - 1; }
+  }
+
+  // ============================================================
+  // 图片缓存增加内存上限，防止无限堆积
+  // ============================================================
+  const ImageCache = {
+    cache: new Map(),
+    MAX_SIZE: 20,
+
+    load(src) {
+      if (this.cache.has(src)) return Promise.resolve(this.cache.get(src));
+      return new Promise((resolve) => {
+        const img = new Image();
+        //对同域图片允许缓存，跨域图片加 crossOrigin 避免污染 canvas
+        if (src.startsWith('http') && !src.includes(location.hostname)) {
+          img.crossOrigin = 'anonymous';
+        }
+        img.onload = () => {
+          if (this.cache.size >= this.MAX_SIZE) {
+            // 淘汰最早的条目
+            const firstKey = this.cache.keys().next().value;
+            this.cache.delete(firstKey);
+          }
+          this.cache.set(src, img);
+          resolve(img);
+        };
+        img.onerror = () => resolve(null);
+        img.src = src;
+      });
+    }
+  };
+
+  const PRESET_TEXTS = [
+    {
+      name: '😭 感动落泪',
+      preview: '坚强... 感动哭了喵',
+      text: '[蓝色开始][删除线开始]坚强[删除线结束][蓝色结束]\n[紫色开始]感动哭了喵[紫色结束]\n[洗脑魔法开始]太好了太好了[洗脑魔法结束]'
+    },
+    {
+      name: '1.0版本的示例文字',
+      preview: '梦开始的地方',
+      text: '[黄色开始]示例文字[黄色结束]\n[渐变开始]给我次香咕[渐变结束]\n[下划线开始]给我次零语[下划线结束]\n[红色开始][删除线开始]关注魔裁新春会喵[删除线结束][红色结束]'
+    },
+    {
+      name: '🍬 香咕安利',
+      preview: '香咕真的很好吃喵！',
+      text: '[渐变开始][粗体开始]香咕真的很好吃！[粗体结束][渐变结束]\n[洗脑魔法开始]给我次香咕[洗脑魔法结束]\n[黄色开始]🍬🍬🍬[黄色结束]'
+    },
+    {
+      name: '🌸 日常问候',
+      preview: '早安！今天也要加油哦',
+      text: '[粉色开始][粗体开始]早安！[粗体结束][粉色结束]\n[绿色开始]今天也要加油哦～[绿色结束]\n[黄色开始]🌸 一起努力 🌸[黄色结束]'
+    },
+    {
+      name: '🔴 不可摧毁的硬币',
+      preview: '强？！！？不好孩子，我并非不可摧毁',
+      text: '🔴[棕色开始][下划线开始]不可摧毁的硬币[下划线结束][棕色结束]'
+    },
+    {
+      name: '🟡 硬币正面',
+      preview: '大功率发生小概率事件',
+      text: '🟡[棕色开始][下划线开始]硬币[下划线结束][棕色结束]'
+    },
+    {
+      name: '🟠 硬币反面',
+      preview: '不知道说什么',
+      text: '🟠[棕色开始][下划线开始]硬币[下划线结束][棕色结束]'
+    },
+    {
+      name: '🌬️ 呼吸法',
+      preview: '暴击率+25%（每层+5%），暴击时层数-1',
+      text: '🌬[棕色开始][下划线开始]呼吸[下划线结束][棕色结束]'
+    },
+    {
+      name: '🐖贼大的群友㊗㊗(推荐!!!)',
+      preview: '发现群友！😋',
+      text: '\n\n\n\n[文字大小=200开始]🐖[文字大小=200结束]'
+    },
+   {
+      name: '🐖XXX群友是㊗(推荐!!!)',
+      preview: '献给最好的群友！😋',
+      text: '\n\n\n[文字大小=32开始]群友A[文字大小=32结束]=[文字大小=100开始]🐖[文字大小=100结束]'
+    },
+    {
+      name: '贡献快捷预设文字➕',
+      preview: '谢谢你们的支持！',
+      text: '[文字大小=20开始]请在b站视频:https://b23.tv/5qzXj6s[文字大小=20结束]\n[文字大小=20开始]评论区底下评论提交[文字大小=20开始]\n[文字大小=20开始]没有b站？[文字大小=20结束]\n[文字大小=20开始]也可以通过邮箱：luo@xia.kim提交[文字大小=20结束]'
+    },
+    {
+      name: '🐖🐖猪猪贴贴(推荐!!!)',
+      preview: '群友，贴贴！',
+      text: '\n\n[文字大小=100开始][左右镜像开始]🐖[左右镜像结束][文字大小=100结束][文字大小=100开始]🐖[文字大小=100结束]\n\n[文字大小=36开始][粉色开始]猪贴贴~[粉色结束][文字大小=36结束]'
+    },
+    {
+      name: '🐖🐖敲打猪猪群友!(推荐!!!)',
+      preview: '群友，坏！',
+      text: '\n\n[文字大小=100开始][左右镜像开始]🐖[左右镜像结束][文字大小=100结束][上下偏移=-20开始][左右偏移=-20开始]🔨[左右偏移=-20结束][上下偏移=-20结束][文字大小=100开始][左右偏移=-30开始]🐖[左右偏移=-30结束][文字大小=100结束]\n\n[文字大小=36开始][粉色开始]敲打猪猪群友![粉色结束][文字大小=36结束]'
+    },
+  ];
+
+  const FILTER_PRESETS = {
+    none:      { brightness: 100, contrast: 100, saturate: 100 },
+    grayscale: { brightness: 100, contrast: 110, saturate: 0   },
+    sepia:     { brightness: 95,  contrast: 110, saturate: 40  },
+    warm:      { brightness: 105, contrast: 100, saturate: 130 },
+    cool:      { brightness: 98,  contrast: 100, saturate: 80  },
+    vivid:     { brightness: 105, contrast: 130, saturate: 180 }
+  };
+
+  const FONT_PREVIEW_TEXT = {
+    "'Noto Sans SC', 'Noto Color Emoji', sans-serif": '默认字体：香咕真的很好吃喵～ 🐱',
+    "'ZCOOL KuaiLe', 'Noto Color Emoji', cursive": '快乐体：艾克斯很神秘～ 🎉',
+    "'ZCOOL XiaoWei', 'Noto Color Emoji', serif": '糯米？!樱桃？！柠檬？！～ 🍬✨',
+    "'Ma Shan Zheng', 'Noto Color Emoji', cursive": '毛笔楷体：香咕真的很好吃喵～ ✍️',
+    "'Long Cang', 'Noto Color Emoji', cursive": '龙藏体：香咕真的很好吃喵～ 🖋️',
+    "'Zhi Mang Xing', 'Noto Color Emoji', cursive": '知芒行：香咕真的很好吃喵～ 🌊',
+    "'Liu Jian Mao Cao', 'Noto Color Emoji', cursive": '流墨毛草：香咕真的很好吃喵～ 🐱',
+  };
+
+  const GOOGLE_FONT_URLS = {
+    "'ZCOOL KuaiLe', 'Noto Color Emoji', cursive":       'https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap',
+    "'ZCOOL XiaoWei', 'Noto Color Emoji', serif":        'https://fonts.googleapis.com/css2?family=ZCOOL+XiaoWei&display=swap',
+    "'Ma Shan Zheng', 'Noto Color Emoji', cursive":      'https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&display=swap',
+    "'Long Cang', 'Noto Color Emoji', cursive":          'https://fonts.googleapis.com/css2?family=Long+Cang&display=swap',
+    "'Zhi Mang Xing', 'Noto Color Emoji', cursive":      'https://fonts.googleapis.com/css2?family=Zhi+Mang+Xing&display=swap',
+    "'Liu Jian Mao Cao', 'Noto Color Emoji', cursive":   'https://fonts.googleapis.com/css2?family=Liu+Jian+Mao+Cao&display=swap',
+  };
+
+  const loadedFontLinks = new Set();
+
+  function injectFontLink(fontVal) {
+    const url = GOOGLE_FONT_URLS[fontVal];
+    if (!url || loadedFontLinks.has(url)) return Promise.resolve();
+    loadedFontLinks.add(url);
+    return new Promise((resolve) => {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = url;
+      link.onload = resolve;
+      link.onerror = resolve;
+      document.head.appendChild(link);
+    });
+  }
+
+  // ============================================================
+  // 通用防抖工具函数
+  // ============================================================
+  function debounce(fn, delay) {
+    let timer;
+    return function(...args) {
+      clearTimeout(timer);
+      timer = setTimeout(() => fn.apply(this, args), delay);
+    };
+  }
+
+  class AnanMemeGenerator {
+    constructor() {
+      this.canvas = document.getElementById('canvas');
+      this.ctx = this.canvas.getContext('2d');
+
+      this.baseImage = null;
+      this.handImage = null;
+      this.customImage = null;
+
+      this.currentEmotion = '开心.png';
+      this.isCustomEmotion = false;
+
+      this.drawPending = false;
+
+      this.longPressTimer = null;
+
+      this.history = new UndoHistory(50);
+
+      this.colorMap = {
+        '红色': '#e74c3c', '橙色': '#e67e22', '黄色': '#f1c40f',
+        '绿色': '#2ecc71', '青色': '#1abc9c', '蓝色': '#3498db',
+        '紫色': '#9b59b6', '粉色': '#fd79a8', '灰色': '#7f8c8d',
+        '黑色': '#2c3e50', '白色': '#ecf0f1', '棕色': '#8b4513'
+      };
+
+      this.boardArea = {
+        left: 88, right: 432, top: 430, bottom: 665,
+        get width()  { return this.right - this.left; },
+        get height() { return this.bottom - this.top; }
+      };
+
+      this.filter = { preset: 'none', brightness: 100, contrast: 100, saturate: 100 };
+
+      // filter滑块用防抖，减少高频重绘，文字输入用更长防抖
+      this._debouncedDrawFromFilter = debounce(() => this.scheduleDraw(), 40);
+      this._debouncedDrawFromText   = debounce(() => this.scheduleDraw(), 80);
+
+      this.init();
+    }
+
+    async init() {
+      this.loadSettings();
+      this.bindEvents();
+      this.buildPresetGrid();
+      // 图片并行加载，用 Promise.all
+      await this.preloadImages();
+      this.checkMobile();
+      // 等待默认字体（Noto Sans SC）和 Emoji 字体均加载完成后再渲染
+      await (window.fontsReady || Promise.resolve());
+      this.scheduleDraw();
+      this.history.push(document.getElementById('textInput').value);
+      this.updateFontPreview();
+    }
+
+    updateFontPreview() {
+      const select = document.getElementById('fontFamily');
+      const preview = document.getElementById('fontPreview');
+      const val = select.value;
+      if (val === 'custom') return;
+      const fontName = val === 'custom' ? "'Noto Sans SC'" : val;
+      preview.style.fontFamily = fontName;
+      preview.textContent = FONT_PREVIEW_TEXT[val] || '预览：香咕真的很好吃喵～ 🍬✨';
+    }
+
+    bindEvents() {
+      const textarea = document.getElementById('textInput');
+
+      //文字输入用防抖减少canvas重绘频率
+      textarea.addEventListener('input', (e) => {
+        this.autoResizeTextarea(e.target);
+        this.history.push(e.target.value);
+        this.updateUndoRedoButtons();
+        this._debouncedDrawFromText();
+      });
+
+      ['fontColor', 'lineHeight', 'textAlign', 'fontSize'].forEach(id => {
+        document.getElementById(id).addEventListener('change', () => this.scheduleDraw());
+      });
+      document.getElementById('fontColor').addEventListener('input', debounce(() => this.scheduleDraw(), 60));
+      document.getElementById('lineHeight').addEventListener('input', debounce(() => this.scheduleDraw(), 60));
+      document.getElementById('fontSize').addEventListener('input', debounce(() => this.scheduleDraw(), 60));
+
+      document.getElementById('fontFamily').addEventListener('change', (e) => {
+        if (e.target.value === 'custom') {
+          document.getElementById('customFontInput').click();
+        } else {
+          const fontVal = e.target.value;
+          const firstFamily = fontVal.split(',')[0].trim().replace(/^['"]|['"]$/g, '');
+          const testSize = parseInt(document.getElementById('fontSize').value) || 32;
+          const preview = document.getElementById('fontPreview');
+          const variants = [
+            `${testSize}px '${firstFamily}'`,
+            `bold ${testSize}px '${firstFamily}'`,
+            `italic ${testSize}px '${firstFamily}'`,
+            `italic bold ${testSize}px '${firstFamily}'`
+          ];
+          const allReady = variants.every(v => document.fonts.check(v));
+          if (!allReady) {
+            preview.textContent = '⏳ 字体加载中，请稍候...';
+            preview.style.color = '#e67e22';
+          }
+          injectFontLink(fontVal).then(() => {
+            return Promise.all(variants.map(v => document.fonts.load(v).catch(() => null)));
+          }).then(() => {
+            return document.fonts.ready;
+          }).then(() => {
+            preview.style.color = '';
+            this.updateFontPreview();
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                this.drawCanvas();
+              });
+            });
+          });
+        }
+      });
+      document.getElementById('customFontInput').addEventListener('change', (e) => this.handleCustomFont(e));
+
+      document.getElementById('posY').addEventListener('input', (e) => {
+        document.getElementById('posYDisplay').textContent = e.target.value;
+        this.scheduleDraw();
+      });
+
+      document.getElementById('imagePosY').addEventListener('input', (e) => {
+        document.getElementById('imagePosYDisplay').textContent = e.target.value;
+        if (this.customImage) {
+          this.customImage.posY = parseInt(e.target.value);
+          this.scheduleDraw();
+        }
+      });
+
+      document.getElementById('emotionSelect').addEventListener('change', (e) => {
+        this.changeEmotion(e.target.value);
+      });
+      document.getElementById('customEmotionInput').addEventListener('change', (e) => {
+        this.handleCustomEmotion(e);
+      });
+
+      document.getElementById('addImageBtn').addEventListener('click', () => {
+        document.getElementById('customImageInput').click();
+      });
+      document.getElementById('customImageInput').addEventListener('change', (e) => {
+        this.handleCustomImage(e);
+      });
+      document.getElementById('removeImageBtn').addEventListener('click', () => {
+        this.removeCustomImage();
+      });
+
+      document.getElementById('imageAlign').addEventListener('change', (e) => {
+        if (this.customImage) { this.customImage.align = e.target.value; this.scheduleDraw(); }
+      });
+      document.getElementById('textPosition').addEventListener('change', (e) => {
+        if (this.customImage) { this.customImage.textPosition = e.target.value; this.scheduleDraw(); }
+      });
+      document.getElementById('zoomInput').addEventListener('input', (e) => {
+        const value = Math.max(20, Math.min(200, parseInt(e.target.value) || 100));
+        if (this.customImage) { this.customImage.zoom = value; this.scheduleDraw(); }
+      });
+
+      document.querySelectorAll('.filter-preset-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.filter-preset-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          this.applyFilterPreset(btn.dataset.filter);
+          this.scheduleDraw();
+        });
+      });
+
+      //filter滑块改用防抖，避免拖动时每帧都重绘
+      ['filterBrightness', 'filterContrast', 'filterSaturate'].forEach(id => {
+        document.getElementById(id).addEventListener('input', (e) => {
+          const key = id.replace('filter', '').toLowerCase();
+          const display = document.getElementById(key + 'Value');
+          display.textContent = e.target.value;
+          this.filter[key] = parseInt(e.target.value);
+          this._debouncedDrawFromFilter();
+        });
+      });
+
+      document.getElementById('focusModeRow').addEventListener('click', () => {
+        document.body.classList.toggle('focus-mode');
+        this.autoResizeTextarea(document.getElementById('textInput'));
+      });
+
+      document.getElementById('effectBtn').addEventListener('click', () => {
+        document.getElementById('effectModal').classList.add('show');
+      });
+      document.getElementById('effectClose').addEventListener('click', () => {
+        document.getElementById('effectModal').classList.remove('show');
+      });
+      document.getElementById('effectModal').addEventListener('click', (e) => {
+        if (e.target.id === 'effectModal') document.getElementById('effectModal').classList.remove('show');
+      });
+
+      document.getElementById('presetBtn').addEventListener('click', () => {
+        document.getElementById('presetModal').classList.add('show');
+      });
+      document.getElementById('presetClose').addEventListener('click', () => {
+        document.getElementById('presetModal').classList.remove('show');
+      });
+      document.getElementById('presetModal').addEventListener('click', (e) => {
+        if (e.target.id === 'presetModal') document.getElementById('presetModal').classList.remove('show');
+      });
+
+      document.querySelectorAll('.effect-item').forEach(item => {
+        item.addEventListener('click', () => {
+          if (item.dataset.paramType) {
+            this.openParamModal(item);
+          } else {
+            this.insertEffect(item.dataset.start, item.dataset.end || '');
+          }
+        });
+      });
+
+      document.getElementById('paramModalClose').addEventListener('click', () => {
+        document.getElementById('paramModal').classList.remove('show');
+      });
+      document.getElementById('paramModalCancel').addEventListener('click', () => {
+        document.getElementById('paramModal').classList.remove('show');
+      });
+      document.getElementById('paramModal').addEventListener('click', (e) => {
+        if (e.target.id === 'paramModal') document.getElementById('paramModal').classList.remove('show');
+      });
+      document.getElementById('paramInputValue').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') document.getElementById('paramModalConfirm').click();
+      });
+      document.getElementById('paramModalConfirm').addEventListener('click', () => {
+        const modal  = document.getElementById('paramModal');
+        const type   = modal.dataset.currentType;
+        const dirSign = modal.dataset.dirSign || '1';
+        const rawVal = parseFloat(document.getElementById('paramInputValue').value);
+        if (isNaN(rawVal)) return;
+
+        let finalType, finalVal;
+
+        if (type === '旋转') {
+          finalType = '旋转';
+          finalVal  = dirSign === '-1' ? -Math.abs(rawVal) : Math.abs(rawVal);
+        } else if (type === '偏移') {
+          const signMap = { right: 1, left: -1, down: 1, up: -1 };
+          const typeMap = { right: '左右偏移', left: '左右偏移', down: '上下偏移', up: '上下偏移' };
+          finalType = typeMap[dirSign] || '左右偏移';
+          finalVal  = (signMap[dirSign] || 1) * Math.abs(rawVal);
+        } else {
+          finalType = type;
+          finalVal  = rawVal;
+        }
+
+        const start = `[${finalType}=${finalVal}开始]`;
+        const end   = `[${finalType}=${finalVal}结束]`;
+        modal.classList.remove('show');
+        this.insertEffect(start, end);
+      });
+
+      document.getElementById('filterToggle').addEventListener('click', () => {
+        const filterBox = document.getElementById('filterBox');
+        filterBox.classList.toggle('open');
+        const label = filterBox.querySelector('.box-label span:first-child');
+        label.textContent = filterBox.classList.contains('open') ? '🎨 图片滤镜（点击收起）' : '🎨 图片滤镜（点击展开）';
+      });
+
+      document.getElementById('changelogBtn').addEventListener('click', () => {
+        document.getElementById('changelogModal').classList.add('show');
+      });
+      document.getElementById('changelogClose').addEventListener('click', () => {
+        document.getElementById('changelogModal').classList.remove('show');
+      });
+      document.getElementById('changelogModal').addEventListener('click', (e) => {
+        if (e.target.id === 'changelogModal') document.getElementById('changelogModal').classList.remove('show');
+      });
+
+      document.getElementById('saveSettingsBtn').addEventListener('click', () => this.saveSettings());
+
+      const resetBtn = document.getElementById('resetSettingsBtn');
+      const startLongPress = () => {
+        document.getElementById('longPressHint').style.display = 'block';
+        resetBtn.style.opacity = '0.7';
+        this.longPressTimer = setTimeout(() => {
+          this.executeReset();
+          document.getElementById('longPressHint').style.display = 'none';
+          resetBtn.style.opacity = '';
+        }, 2000);
+      };
+      const cancelLongPress = () => {
+        clearTimeout(this.longPressTimer);
+        document.getElementById('longPressHint').style.display = 'none';
+        resetBtn.style.opacity = '';
+      };
+      resetBtn.addEventListener('mousedown', startLongPress);
+      resetBtn.addEventListener('mouseup', cancelLongPress);
+      resetBtn.addEventListener('mouseleave', cancelLongPress);
+      resetBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startLongPress(); }, { passive: false });
+      resetBtn.addEventListener('touchend', cancelLongPress);
+      resetBtn.addEventListener('touchcancel', cancelLongPress);
+
+      document.getElementById('downloadBtn').addEventListener('click', () => this.downloadImage());
+      document.getElementById('copyBtn').addEventListener('click', () => this.copyToClipboard());
+
+      document.getElementById('undoBtn').addEventListener('click', () => {
+        const value = this.history.undo();
+        if (value !== null) {
+          document.getElementById('textInput').value = value;
+          this.autoResizeTextarea(document.getElementById('textInput'));
+          this.updateUndoRedoButtons();
+          this.scheduleDraw();
+        }
+      });
+      document.getElementById('redoBtn').addEventListener('click', () => {
+        const value = this.history.redo();
+        if (value !== null) {
+          document.getElementById('textInput').value = value;
+          this.autoResizeTextarea(document.getElementById('textInput'));
+          this.updateUndoRedoButtons();
+          this.scheduleDraw();
+        }
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key === 'z') {
+          e.preventDefault();
+          document.getElementById('undoBtn').click();
+        }
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.shiftKey && e.key === 'z'))) {
+          e.preventDefault();
+          document.getElementById('redoBtn').click();
+        }
+      });
+    }
+
+    buildPresetGrid() {
+      const grid = document.getElementById('presetGrid');
+      //DocumentFragment 批量插入 DOM，减少重排次数
+      const frag = document.createDocumentFragment();
+      PRESET_TEXTS.forEach(preset => {
+        const item = document.createElement('div');
+        item.className = 'preset-item';
+        item.innerHTML = `<div class="preset-name">${preset.name}</div><div class="preset-preview">${preset.preview}</div>`;
+        item.addEventListener('click', () => {
+          const textarea = document.getElementById('textInput');
+          const existing = textarea.value;
+          textarea.value = existing ? existing + '\n' + preset.text : preset.text;
+          this.autoResizeTextarea(textarea);
+          this.history.push(textarea.value);
+          this.updateUndoRedoButtons();
+          this.scheduleDraw();
+          document.getElementById('presetModal').classList.remove('show');
+        });
+        frag.appendChild(item);
+      });
+      grid.appendChild(frag);
+    }
+
+    autoResizeTextarea(textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = Math.min(Math.max(textarea.scrollHeight, 60), 120) + 'px';
+    }
+
+    updateUndoRedoButtons() {
+      document.getElementById('undoBtn').disabled = !this.history.canUndo();
+      document.getElementById('redoBtn').disabled = !this.history.canRedo();
+    }
+
+    checkMobile() {
+      if (/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+        document.getElementById('mobileWarning').style.display = 'block';
+      }
+    }
+
+    readFileAsDataURL(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    loadImageFromSrc(src) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => resolve(null);
+        img.src = src;
+      });
+    }
+
+    truncateFilename(name, maxLen) {
+      return name.length > maxLen ? name.substring(0, maxLen) + '...' : name;
+    }
+
+    async preloadImages() {
+      // 并行加载主图和手部图，而非串行
+      const [base, hand] = await Promise.all([
+        ImageCache.load('anans/开心.png'),
+        ImageCache.load('anans/AnAn2.png')
+      ]);
+      this.baseImage = base;
+      this.handImage = hand;
+    }
+
+    async changeEmotion(filename) {
+      if (filename === 'custom') {
+        document.getElementById('customEmotionInput').click();
+        return;
+      }
+      this.isCustomEmotion = false;
+      this.currentEmotion = filename;
+      const img = await ImageCache.load('anans/' + filename);
+      if (img) { this.baseImage = img; this.scheduleDraw(); }
+    }
+
+    async handleCustomEmotion(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      try {
+        const dataUrl = await this.readFileAsDataURL(file);
+        const img = await this.loadImageFromSrc(dataUrl);
+        if (img) {
+          this.baseImage = img;
+          this.isCustomEmotion = true;
+          const select = document.getElementById('emotionSelect');
+          select.querySelector('option[value="custom_temp"]')?.remove();
+          const opt = document.createElement('option');
+          opt.value = 'custom_temp';
+          opt.text = '📷 ' + this.truncateFilename(file.name, 20);
+          opt.selected = true;
+          select.insertBefore(opt, select.lastElementChild);
+          this.scheduleDraw();
+        }
+      } catch (e) {
+        console.error('加载自定义表情失败:', e);
+      }
+    }
+
+    async handleCustomImage(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      try {
+        const dataUrl = await this.readFileAsDataURL(file);
+        const img = await this.loadImageFromSrc(dataUrl);
+        if (img) {
+          this.customImage = { image: img, name: file.name, align: 'center', textPosition: 'bottom', posY: -22, zoom: 100 };
+
+          document.getElementById('imageFilename').textContent = file.name;
+          document.getElementById('removeImageBtn').style.display = 'inline-block';
+          document.getElementById('imageLayoutBox').style.display = 'block';
+          document.getElementById('imagePosYGroup').style.display = 'block';
+
+          const posYSlider = document.getElementById('posY');
+          posYSlider.min = 474;
+          if (parseInt(posYSlider.value) < 474) {
+            posYSlider.value = 474;
+            document.getElementById('posYDisplay').textContent = '474';
+          }
+
+          document.getElementById('imagePosY').value = -22;
+          document.getElementById('imagePosYDisplay').textContent = '-22';
+
+          document.getElementById('zoomInput').value = 100;
+          document.getElementById('imageAlign').value = 'center';
+          document.getElementById('textPosition').value = 'bottom';
+
+          this.scheduleDraw();
+        }
+      } catch (e) {
+        console.error('加载自定义图片失败:', e);
+      }
+    }
+
+    removeCustomImage() {
+      this.customImage = null;
+      document.getElementById('customImageInput').value = '';
+      document.getElementById('imageFilename').textContent = '未添加图片';
+      document.getElementById('removeImageBtn').style.display = 'none';
+      document.getElementById('imageLayoutBox').style.display = 'none';
+      document.getElementById('imagePosYGroup').style.display = 'none';
+
+      const posYSlider = document.getElementById('posY');
+      posYSlider.min = 464;
+      posYSlider.value = 464;
+      document.getElementById('posYDisplay').textContent = '464';
+
+      this.scheduleDraw();
+    }
+
+    async handleCustomFont(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      try {
+        const buffer = await file.arrayBuffer();
+        const fontName = 'CustomFont_' + Date.now();
+        const fontFace = new FontFace(fontName, buffer);
+        await fontFace.load();
+        document.fonts.add(fontFace);
+
+        const select = document.getElementById('fontFamily');
+        select.querySelectorAll('option').forEach(opt => {
+          if (opt.text.startsWith('📝 ' + file.name.slice(0, 8))) opt.remove();
+        });
+        const opt = document.createElement('option');
+        opt.value = fontName + ", 'Noto Color Emoji', sans-serif";
+        opt.text = '📝 ' + this.truncateFilename(file.name, 15);
+        opt.selected = true;
+        select.insertBefore(opt, select.lastElementChild);
+
+        const preview = document.getElementById('fontPreview');
+        preview.style.fontFamily = fontName;
+        preview.textContent = '自定义字体：香咕真的很好吃喵～ 🍬✨';
+
+        this.scheduleDraw();
+      } catch (e) {
+        alert('字体加载失败，请尝试其他格式');
+        document.getElementById('fontFamily').value = "'Noto Sans SC', 'Noto Color Emoji', sans-serif";
+      }
+    }
+
+    openParamModal(item) {
+      const textarea = document.getElementById('textInput');
+      const selStart = textarea.selectionStart;
+      const selEnd   = textarea.selectionEnd;
+      const selected = textarea.value.substring(selStart, selEnd);
+      const type     = item.dataset.paramType;
+      const def      = item.dataset.paramDefault;
+
+      const modal      = document.getElementById('paramModal');
+      const dirGroup   = document.getElementById('paramDirectionGroup');
+      const dirLabel   = document.getElementById('paramDirectionLabel');
+      const dirBtns    = document.getElementById('paramDirectionBtns');
+      const inputLabel = document.getElementById('paramInputLabel');
+      const inputEl    = document.getElementById('paramInputValue');
+      const hintEl     = document.getElementById('paramInputHint');
+
+      modal.dataset.currentType = type;
+      modal.dataset.dirSign = '1';
+
+      document.getElementById('paramSelectedText').textContent = selected || '（未选中文字，将在光标处插入标签）';
+
+      dirGroup.style.display = 'none';
+      dirBtns.innerHTML = '';
+
+      const makeDirectionBtns = (labelText, options) => {
+        dirGroup.style.display = 'block';
+        dirLabel.textContent   = labelText;
+        dirBtns.style.gridTemplateColumns = `repeat(${options.length}, 1fr)`;
+        options.forEach((opt, i) => {
+          const btn = document.createElement('button');
+          btn.className = 'btn';
+          btn.textContent = opt.label;
+          btn.style.cssText = 'font-size:13px;height:40px;';
+          if (i === 0) {
+            btn.style.background = '#333';
+            btn.style.color = '#fff';
+            modal.dataset.dirSign = opt.sign;
+          }
+          btn.addEventListener('click', () => {
+            dirBtns.querySelectorAll('button').forEach(b => {
+              b.style.background = '#fff';
+              b.style.color = '#000';
+            });
+            btn.style.background = '#333';
+            btn.style.color = '#fff';
+            modal.dataset.dirSign = opt.sign;
+          });
+          dirBtns.appendChild(btn);
+        });
+      };
+
+      if (type === '旋转') {
+        document.getElementById('paramModalTitle').textContent = '🔃 设置旋转角度';
+        makeDirectionBtns('旋转方向', [
+          { label: '↻ 顺时针', sign: '1' },
+          { label: '↺ 逆时针', sign: '-1' }
+        ]);
+        inputLabel.textContent = '旋转角度（度）';
+        inputEl.value          = def;
+        inputEl.removeAttribute('min');
+        inputEl.removeAttribute('max');
+        hintEl.textContent     = '输入 0 ~ 360 的角度值，方向由上方选项决定';
+
+      } else if (type === '偏移') {
+        document.getElementById('paramModalTitle').textContent = '↔ 设置文字偏移';
+        makeDirectionBtns('偏移方向', [
+          { label: '→ 向右',  sign: 'right'  },
+          { label: '← 向左',  sign: 'left'   },
+          { label: '↓ 向下',  sign: 'down'   },
+          { label: '↑ 向上',  sign: 'up'     }
+        ]);
+        inputLabel.textContent = '偏移距离（px）';
+        inputEl.value          = def;
+        inputEl.removeAttribute('min');
+        inputEl.removeAttribute('max');
+        hintEl.textContent     = '输入偏移的像素距离，方向由上方选项决定';
+
+      } else if (type === '文字大小') {
+        document.getElementById('paramModalTitle').textContent = '设置字体大小';
+        inputLabel.textContent = '字体大小（px）';
+        inputEl.value          = def;
+        inputEl.removeAttribute('min');
+        inputEl.removeAttribute('max');
+        hintEl.textContent     = '建议 10 ~ 120，数字越大字越大';
+
+      } else if (type === '文字粗细') {
+        document.getElementById('paramModalTitle').textContent = '设置字体粗细';
+        inputLabel.textContent = '字体粗细（100 ~ 900）';
+        inputEl.value          = def;
+        inputEl.removeAttribute('min');
+        inputEl.removeAttribute('max');
+        hintEl.textContent     = '100 最细，900 最粗，通常用 100 的倍数，例如 400 / 700 / 900';
+      }
+
+      document.getElementById('effectModal').classList.remove('show');
+      modal.classList.add('show');
+      setTimeout(() => inputEl.select(), 50);
+    }
+
+    insertEffect(startTag, endTag) {
+      const textarea = document.getElementById('textInput');
+      const selStart = textarea.selectionStart;
+      const selEnd = textarea.selectionEnd;
+      const value = textarea.value;
+
+      textarea.value = value.substring(0, selStart) + startTag + value.substring(selStart, selEnd) + endTag + value.substring(selEnd);
+      textarea.focus();
+      textarea.setSelectionRange(selStart + startTag.length, selStart + startTag.length);
+
+      this.autoResizeTextarea(textarea);
+      this.history.push(textarea.value);
+      this.updateUndoRedoButtons();
+      this.scheduleDraw();
+      document.getElementById('effectModal').classList.remove('show');
+    }
+
+    applyFilterPreset(presetName) {
+      const preset = FILTER_PRESETS[presetName] || FILTER_PRESETS.none;
+      this.filter = { preset: presetName, ...preset };
+
+      document.getElementById('filterBrightness').value = preset.brightness;
+      document.getElementById('brightnessValue').textContent = preset.brightness;
+      document.getElementById('filterContrast').value = preset.contrast;
+      document.getElementById('contrastValue').textContent = preset.contrast;
+      document.getElementById('filterSaturate').value = preset.saturate;
+      document.getElementById('saturateValue').textContent = preset.saturate;
+    }
+
+    get canvasFilterString() {
+      const f = this.filter;
+      // 默认值不设置 filter，提升canvas性能
+      if (f.brightness === 100 && f.contrast === 100 && f.saturate === 100) return 'none';
+      return `brightness(${f.brightness}%) contrast(${f.contrast}%) saturate(${f.saturate}%)`;
+    }
+
+    parseStyledText(rawText) {
+      rawText = rawText.replace(/\[洗脑魔法开始\]([\s\S]*?)\[洗脑魔法结束\]/g, '[洗脑魔法开始]【$1】[洗脑魔法结束]');
+
+      const tagRegex = /\[(红色|橙色|黄色|绿色|青色|蓝色|紫色|粉色|灰色|黑色|白色|棕色|删除线|下划线|斜体|粗体|洗脑魔法|阴影|渐变|描边|左右镜像|上下镜像)(开始|结束)\]|\[文字大小=(\d+)(开始|结束)\]|\[文字粗细=(\d+)(开始|结束)\]|\[旋转=(-?\d+(?:\.\d+)?)(开始|结束)\]|\[左右偏移=(-?\d+(?:\.\d+)?)(开始|结束)\]|\[上下偏移=(-?\d+(?:\.\d+)?)(开始|结束)\]/g;
+
+      const tags = [];
+      let match;
+      while ((match = tagRegex.exec(rawText)) !== null) {
+        if (match[1]) {
+          tags.push({ index: match.index, length: match[0].length, name: match[1], type: match[2] });
+        } else if (match[3] !== undefined) {
+          tags.push({ index: match.index, length: match[0].length, name: '文字大小', type: match[4], value: parseInt(match[3]) });
+        } else if (match[5] !== undefined) {
+          tags.push({ index: match.index, length: match[0].length, name: '文字粗细', type: match[6], value: parseInt(match[5]) });
+        } else if (match[7] !== undefined) {
+          tags.push({ index: match.index, length: match[0].length, name: '旋转', type: match[8], value: parseFloat(match[7]) });
+        } else if (match[9] !== undefined) {
+          tags.push({ index: match.index, length: match[0].length, name: '左右偏移', type: match[10], value: parseFloat(match[9]) });
+        } else if (match[11] !== undefined) {
+          tags.push({ index: match.index, length: match[0].length, name: '上下偏移', type: match[12], value: parseFloat(match[11]) });
+        }
+      }
+
+      const currentStyle = {
+        color: null, strike: false, underline: false,
+        italic: false, bold: false,
+        shadow: false, gradient: false, outline: false,
+        mirrorH: false, mirrorV: false,
+        rotate: null,
+        offsetX: 0, offsetY: 0,
+        fontSize: null,
+        fontWeight: null
+      };
+
+      const styleStack = [];
+      const intervals = [];
+      let pos = 0;
+
+      for (const tag of tags) {
+        if (tag.index > pos) {
+          intervals.push({ start: pos, end: tag.index, style: { ...currentStyle } });
+        }
+
+        if (tag.type === '开始') {
+          styleStack.push({ name: tag.name, value: tag.value, prevStyle: { ...currentStyle } });
+          const cm = this.colorMap;
+          if (cm[tag.name])               currentStyle.color = cm[tag.name];
+          else if (tag.name === '删除线') currentStyle.strike = true;
+          else if (tag.name === '下划线') currentStyle.underline = true;
+          else if (tag.name === '斜体')   currentStyle.italic = true;
+          else if (tag.name === '粗体')   currentStyle.bold = true;
+          else if (tag.name === '洗脑魔法') currentStyle.color = '#9b59b6';
+          else if (tag.name === '阴影')   currentStyle.shadow = true;
+          else if (tag.name === '渐变')   currentStyle.gradient = true;
+          else if (tag.name === '描边')   currentStyle.outline = true;
+          else if (tag.name === '左右镜像') currentStyle.mirrorH = true;
+          else if (tag.name === '上下镜像') currentStyle.mirrorV = true;
+          else if (tag.name === '旋转')   currentStyle.rotate = tag.value;
+          else if (tag.name === '左右偏移') currentStyle.offsetX = tag.value;
+          else if (tag.name === '上下偏移') currentStyle.offsetY = tag.value;
+          else if (tag.name === '文字大小')  currentStyle.fontSize = tag.value;
+          else if (tag.name === '文字粗细')  currentStyle.fontWeight = tag.value;
+
+        } else if (tag.type === '结束') {
+          const idx = styleStack.findLastIndex(x => {
+            if (x.name !== tag.name) return false;
+            if (tag.name === '文字大小' || tag.name === '文字粗细' || tag.name === '旋转' || tag.name === '左右偏移' || tag.name === '上下偏移') return x.value === tag.value;
+            return true;
+          });
+          if (idx !== -1) {
+            Object.assign(currentStyle, styleStack[idx].prevStyle);
+            styleStack.splice(idx, 1);
+          }
+        }
+
+        pos = tag.index + tag.length;
+      }
+
+      if (pos < rawText.length) {
+        intervals.push({ start: pos, end: rawText.length, style: { ...currentStyle } });
+      }
+
+      const result = [];
+      for (const interval of intervals) {
+        const chars = Array.from(rawText.substring(interval.start, interval.end));
+        for (const char of chars) {
+          result.push({ char, ...interval.style });
+        }
+      }
+      return result;
+    }
+
+    calculateImageLayout() {
+      if (!this.customImage) return null;
+
+      const board = this.boardArea;
+      const margin = 15;
+      const gap = 8;
+      const img = this.customImage.image;
+      const zoom = this.customImage.zoom / 100;
+      const align = this.customImage.align || 'center';
+      const textPos = this.customImage.textPosition || 'bottom';
+      const posY = this.customImage.posY || 0;
+
+      let availW, availH;
+      if (textPos === 'top' || textPos === 'bottom') {
+        availW = board.width - margin * 2;
+        availH = (board.height - gap) / 2 - margin;
+      } else {
+        availW = (board.width - gap) / 2 - margin;
+        availH = board.height - margin * 2;
+      }
+
+      const scale = Math.min(availW / img.width, availH / img.height, 1) * zoom;
+      const w = img.width * scale;
+      const h = img.height * scale;
+
+      let x, y;
+      if (textPos === 'top' || textPos === 'bottom') {
+        x = align === 'left' ? board.left + margin
+          : align === 'right' ? board.right - margin - w
+          : board.left + (board.width - w) / 2;
+        y = (textPos === 'top' ? board.top + board.height / 2 + gap / 2 : board.top + margin) + posY;
+        y = Math.max(board.top + margin, Math.min(y, board.bottom - margin - h));
+      } else {
+        y = board.top + (board.height - h) / 2 + posY;
+        y = Math.max(board.top + margin, Math.min(y, board.bottom - margin - h));
+        x = textPos === 'left' ? board.right - margin - w : board.left + margin;
+      }
+
+      let textX, textY, textMaxW, textMaxH, textAlign;
+      if (textPos === 'top') {
+        textX = board.left + margin; textY = board.top + margin;
+        textMaxW = board.width - margin * 2; textMaxH = board.height / 2 - gap - margin;
+        textAlign = align;
+      } else if (textPos === 'bottom') {
+        textX = board.left + margin; textY = y + h + gap;
+        textMaxW = board.width - margin * 2; textMaxH = board.bottom - textY - margin;
+        textAlign = align;
+      } else if (textPos === 'left') {
+        textX = board.left + margin; textY = board.top + margin;
+        textMaxW = board.width / 2 - gap - margin; textMaxH = board.height - margin * 2;
+        textAlign = 'left';
+      } else {
+        textX = x + w + gap; textY = board.top + margin;
+        textMaxW = board.right - textX - margin; textMaxH = board.height - margin * 2;
+        textAlign = 'left';
+      }
+
+      return { x, y, w, h, textArea: { x: textX, y: textY, maxW: textMaxW, maxH: textMaxH, align: textAlign } };
+    }
+
+    scheduleDraw() {
+      if (this.drawPending) return;
+      this.drawPending = true;
+      requestAnimationFrame(() => {
+        this.drawPending = false;
+        this.drawCanvas();
+      });
+    }
+
+    drawCanvas() {
+      const ctx = this.ctx;
+      ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+      if (this.baseImage && this.baseImage.complete && this.baseImage.naturalWidth) {
+        ctx.save();
+        const filterStr = this.canvasFilterString;
+        if (filterStr !== 'none' && typeof ctx.filter !== 'undefined') ctx.filter = filterStr;
+        ctx.drawImage(this.baseImage, 0, 0, this.canvas.width, this.canvas.height);
+        if (typeof ctx.filter !== 'undefined') ctx.filter = 'none';
+        ctx.restore();
+      } else {
+        ctx.fillStyle = '#f5f5f5';
+        ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+      }
+
+      const fontFamily = (() => {
+        const val = document.getElementById('fontFamily').value;
+        return val === 'custom' ? "'Noto Sans SC', 'Noto Color Emoji', sans-serif" : val;
+      })();
+      const defaultColor = document.getElementById('fontColor').value;
+      const lineHeightMult = parseFloat(document.getElementById('lineHeight').value) || 1.0;
+      const globalFontSize = parseInt(document.getElementById('fontSize').value) || 32;
+      const rawText = document.getElementById('textInput').value || '';
+      const chars = this.parseStyledText(rawText);
+
+      if (this.customImage) {
+        const layout = this.calculateImageLayout();
+        if (layout) {
+          ctx.drawImage(this.customImage.image, layout.x, layout.y, layout.w, layout.h);
+          const ta = layout.textArea;
+          const posYOffset = (parseInt(document.getElementById('posY').value) || 455) - 455;
+          const lines = this.renderTextInArea(
+            chars, ta.x, ta.y + posYOffset, ta.maxW,
+            Math.max(20, ta.maxH - Math.abs(posYOffset)),
+            globalFontSize, fontFamily, defaultColor, ta.align, lineHeightMult
+          );
+          document.getElementById('overflowWarning').classList.toggle('show', lines * (globalFontSize * lineHeightMult) > ta.maxH);
+        }
+      } else {
+        const startY = parseInt(document.getElementById('posY').value) || 455;
+        const textAlign = document.getElementById('textAlign').value;
+        const lines = this.renderTextInArea(
+          chars, this.boardArea.left, startY,
+          this.boardArea.width, this.boardArea.bottom - startY,
+          globalFontSize, fontFamily, defaultColor, textAlign, lineHeightMult
+        );
+        document.getElementById('overflowWarning').classList.toggle('show', startY + lines * (globalFontSize * lineHeightMult) > this.boardArea.bottom);
+      }
+
+      if (!this.isCustomEmotion && this.handImage && this.handImage.complete && this.handImage.naturalWidth) {
+        ctx.drawImage(this.handImage, 0, 0, this.canvas.width, this.canvas.height);
+      }
+    }
+
+    renderTextInArea(chars, areaX, areaY, maxWidth, maxHeight, globalFontSize, fontFamily, defaultColor, align, lineHeightMult) {
+      const ctx = this.ctx;
+
+      const processed = chars.map(char => {
+        const fontSize = char.fontSize !== null ? char.fontSize : globalFontSize;
+        const weight = char.fontWeight !== null ? char.fontWeight : (char.bold ? 'bold' : 'normal');
+        const style = char.italic ? 'italic' : 'normal';
+        const font = `${style} ${weight} ${fontSize}px ${fontFamily}`;
+        ctx.font = font;
+        return { ...char, resolvedFont: font, resolvedFontSize: fontSize, charWidth: ctx.measureText(char.char).width };
+      });
+
+      const lines = [];
+      let currentLine = [];
+      let currentLineWidth = 0;
+
+      for (const char of processed) {
+        if (char.char === '\n') {
+          lines.push(currentLine);
+          currentLine = [];
+          currentLineWidth = 0;
+          continue;
+        }
+        if (currentLineWidth + char.charWidth > maxWidth - 1 && currentLine.length > 0) {
+          lines.push(currentLine);
+          currentLine = [char];
+          currentLineWidth = char.charWidth;
+        } else {
+          currentLine.push(char);
+          currentLineWidth += char.charWidth;
+        }
+      }
+      if (currentLine.length) lines.push(currentLine);
+      if (!lines.length) return 0;
+
+      ctx.font = `normal ${globalFontSize}px ${fontFamily}`;
+      const metrics = ctx.measureText('M');
+      const ascent  = metrics.actualBoundingBoxAscent  || globalFontSize * 0.8;
+      const descent = metrics.actualBoundingBoxDescent || globalFontSize * 0.2;
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const lineY = areaY + i * (globalFontSize * lineHeightMult);
+
+        if (lineY + descent > areaY + maxHeight) break;
+        if (!line.length) continue;
+
+        const totalWidth = line.reduce((sum, c) => sum + c.charWidth, 0);
+
+        let startX;
+        let stretch = false;
+        if (align === 'left') {
+          startX = areaX;
+          if (totalWidth > 0 && (areaX + maxWidth) - (startX + totalWidth) < maxWidth * 0.1) stretch = true;
+        } else if (align === 'right') {
+          startX = areaX + maxWidth - totalWidth;
+          if (totalWidth > 0 && startX - areaX < maxWidth * 0.1) stretch = true;
+        } else {
+          startX = areaX + (maxWidth - totalWidth) / 2;
+        }
+
+        let xScale = 1;
+        if (stretch && totalWidth > 0) {
+          xScale = maxWidth / totalWidth;
+          if (align === 'right') startX = areaX + maxWidth - totalWidth * xScale;
+        }
+
+        let x = startX;
+        const charPositions = line.map(char => {
+          const pos = x;
+          x += char.charWidth * xScale;
+          return pos;
+        });
+
+        const strikeSections = [];
+        const underlineSections = [];
+        let strikeStart = null;
+        let underlineStart = null;
+
+        let ci = 0;
+        while (ci < line.length) {
+          const char = line[ci];
+          const charX = charPositions[ci];
+
+          if (char.rotate !== null) {
+            const angle = char.rotate;
+            let groupEnd = ci;
+            while (groupEnd + 1 < line.length && line[groupEnd + 1].rotate === angle) groupEnd++;
+
+            const groupStartX = charPositions[ci];
+            const groupEndX   = charPositions[groupEnd] + line[groupEnd].charWidth * xScale;
+            const groupCX     = (groupStartX + groupEndX) / 2;
+            const groupCY     = lineY - globalFontSize / 2;
+
+            ctx.save();
+            ctx.translate(groupCX, groupCY);
+            ctx.rotate(angle * Math.PI / 180);
+            ctx.translate(-groupCX, -groupCY);
+
+            for (let gi = ci; gi <= groupEnd; gi++) {
+              const gc   = line[gi];
+              const gcX  = charPositions[gi];
+              const gcW  = gc.charWidth * xScale;
+
+              ctx.save();
+              ctx.font = gc.resolvedFont;
+
+              if (gc.mirrorH || gc.mirrorV) {
+                const mx = gcX + gcW / 2;
+                const my = lineY - gc.resolvedFontSize / 2;
+                ctx.translate(mx, my);
+                if (gc.mirrorH) ctx.scale(-1, 1);
+                if (gc.mirrorV) ctx.scale(1, -1);
+                ctx.translate(-mx, -my);
+              }
+
+              if (gc.shadow) {
+                ctx.shadowColor = 'rgba(0,0,0,0.65)';
+                ctx.shadowBlur = 5;
+                ctx.shadowOffsetX = 2;
+                ctx.shadowOffsetY = 2;
+              }
+
+              if (gc.gradient) {
+                const grad = ctx.createLinearGradient(gcX, lineY - gc.resolvedFontSize, gcX + gcW, lineY);
+                grad.addColorStop(0, '#e74c3c');
+                grad.addColorStop(0.33, '#f1c40f');
+                grad.addColorStop(0.66, '#27ae60');
+                grad.addColorStop(1, '#9b59b6');
+                ctx.fillStyle = grad;
+              } else {
+                ctx.fillStyle = gc.color || defaultColor;
+              }
+
+              ctx.fillText(gc.char, gcX + (gc.offsetX || 0), lineY + (gc.offsetY || 0));
+
+              if (gc.outline) {
+                ctx.shadowColor = 'transparent';
+                ctx.shadowBlur = 0;
+                ctx.strokeStyle = gc.color || defaultColor;
+                ctx.lineWidth = Math.max(1.5, gc.resolvedFontSize * 0.06);
+                ctx.strokeText(gc.char, gcX + (gc.offsetX || 0), lineY + (gc.offsetY || 0));
+              }
+
+              ctx.restore();
+
+              if (gc.strike) {
+                if (!strikeStart) strikeStart = { x: gcX, color: gc.color };
+              } else if (strikeStart) {
+                strikeSections.push({ startX: strikeStart.x, endX: gcX, color: strikeStart.color });
+                strikeStart = null;
+              }
+              if (gc.underline) {
+                if (!underlineStart) underlineStart = { x: gcX, color: gc.color };
+              } else if (underlineStart) {
+                underlineSections.push({ startX: underlineStart.x, endX: gcX, color: underlineStart.color });
+                underlineStart = null;
+              }
+            }
+
+            ctx.restore();
+            ci = groupEnd + 1;
+
+          } else {
+            const charW = char.charWidth * xScale;
+            ctx.save();
+            ctx.font = char.resolvedFont;
+
+            if (char.mirrorH || char.mirrorV) {
+              const cx = charX + charW / 2;
+              const cy = lineY - char.resolvedFontSize / 2;
+              ctx.translate(cx, cy);
+              if (char.mirrorH) ctx.scale(-1, 1);
+              if (char.mirrorV) ctx.scale(1, -1);
+              ctx.translate(-cx, -cy);
+            }
+
+            if (char.shadow) {
+              ctx.shadowColor = 'rgba(0,0,0,0.65)';
+              ctx.shadowBlur = 5;
+              ctx.shadowOffsetX = 2;
+              ctx.shadowOffsetY = 2;
+            }
+
+            if (char.gradient) {
+              const grad = ctx.createLinearGradient(charX, lineY - char.resolvedFontSize, charX + charW, lineY);
+              grad.addColorStop(0, '#e74c3c');
+              grad.addColorStop(0.33, '#f1c40f');
+              grad.addColorStop(0.66, '#27ae60');
+              grad.addColorStop(1, '#9b59b6');
+              ctx.fillStyle = grad;
+            } else {
+              ctx.fillStyle = char.color || defaultColor;
+            }
+
+            ctx.fillText(char.char, charX + (char.offsetX || 0), lineY + (char.offsetY || 0));
+
+            if (char.outline) {
+              ctx.shadowColor = 'transparent';
+              ctx.shadowBlur = 0;
+              ctx.strokeStyle = char.color || defaultColor;
+              ctx.lineWidth = Math.max(1.5, char.resolvedFontSize * 0.06);
+              ctx.strokeText(char.char, charX + (char.offsetX || 0), lineY + (char.offsetY || 0));
+            }
+
+            ctx.restore();
+
+            if (char.strike) {
+              if (!strikeStart) strikeStart = { x: charX, color: char.color };
+            } else if (strikeStart) {
+              strikeSections.push({ startX: strikeStart.x, endX: charX, color: strikeStart.color });
+              strikeStart = null;
+            }
+            if (char.underline) {
+              if (!underlineStart) underlineStart = { x: charX, color: char.color };
+            } else if (underlineStart) {
+              underlineSections.push({ startX: underlineStart.x, endX: charX, color: underlineStart.color });
+              underlineStart = null;
+            }
+
+            ci++;
+          }
+        }
+
+        const finalX = charPositions[line.length - 1] + line[line.length - 1].charWidth * xScale;
+        if (strikeStart)    strikeSections.push({ startX: strikeStart.x, endX: finalX, color: strikeStart.color });
+        if (underlineStart) underlineSections.push({ startX: underlineStart.x, endX: finalX, color: underlineStart.color });
+
+        ctx.save();
+        ctx.lineWidth = Math.max(1, globalFontSize * 0.08);
+        const strikeY    = lineY - (ascent - globalFontSize * 0.5);
+        const underlineY = lineY + descent * 0.8;
+
+        for (const s of strikeSections) {
+          ctx.beginPath();
+          ctx.strokeStyle = s.color || defaultColor;
+          ctx.moveTo(s.startX, strikeY);
+          ctx.lineTo(s.endX, strikeY);
+          ctx.stroke();
+        }
+        for (const u of underlineSections) {
+          ctx.beginPath();
+          ctx.strokeStyle = u.color || defaultColor;
+          ctx.moveTo(u.startX, underlineY);
+          ctx.lineTo(u.endX, underlineY);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      return lines.length;
+    }
+
+    saveSettings() {
+      const success = StorageManager.save({
+        text:       document.getElementById('textInput').value,
+        fontFamily: document.getElementById('fontFamily').value,
+        fontSize:   document.getElementById('fontSize').value,
+        fontColor:  document.getElementById('fontColor').value,
+        textAlign:  document.getElementById('textAlign').value,
+        lineHeight: document.getElementById('lineHeight').value,
+        posY:       document.getElementById('posY').value,
+        emotion:    this.currentEmotion,
+        filterPreset:      this.filter.preset,
+        filterBrightness:  this.filter.brightness,
+        filterContrast:    this.filter.contrast,
+        filterSaturate:    this.filter.saturate
+      });
+      const btn = document.getElementById('saveSettingsBtn');
+      this.showButtonFeedback(btn, success ? '✅ 已保存' : '❌ 保存失败', success ? 'success' : 'error');
+    }
+
+    loadSettings() {
+      const s = StorageManager.load();
+
+      document.getElementById('textInput').value   = s.text;
+      document.getElementById('fontFamily').value   = s.fontFamily;
+      document.getElementById('fontSize').value     = s.fontSize;
+      document.getElementById('fontColor').value    = s.fontColor;
+      document.getElementById('textAlign').value    = s.textAlign;
+      document.getElementById('lineHeight').value   = s.lineHeight;
+      document.getElementById('posY').value         = s.posY;
+      document.getElementById('posYDisplay').textContent = s.posY;
+
+      this.autoResizeTextarea(document.getElementById('textInput'));
+
+      if (s.filterPreset && s.filterPreset !== 'none') {
+        this.filter = { preset: s.filterPreset, brightness: s.filterBrightness || 100, contrast: s.filterContrast || 100, saturate: s.filterSaturate || 100 };
+        document.querySelectorAll('.filter-preset-btn').forEach(b => b.classList.toggle('active', b.dataset.filter === s.filterPreset));
+        document.getElementById('filterBrightness').value = s.filterBrightness || 100;
+        document.getElementById('brightnessValue').textContent = s.filterBrightness || 100;
+        document.getElementById('filterContrast').value = s.filterContrast || 100;
+        document.getElementById('contrastValue').textContent = s.filterContrast || 100;
+        document.getElementById('filterSaturate').value = s.filterSaturate || 100;
+        document.getElementById('saturateValue').textContent = s.filterSaturate || 100;
+      }
+
+      if (s.emotion && s.emotion !== '开心.png') {
+        this.changeEmotion(s.emotion);
+        document.getElementById('emotionSelect').value = s.emotion;
+      }
+    }
+
+    executeReset() {
+      const defaults = StorageManager.getDefaults();
+
+      document.getElementById('textInput').value   = defaults.text;
+      document.getElementById('fontFamily').value   = defaults.fontFamily;
+      document.getElementById('fontSize').value     = defaults.fontSize;
+      document.getElementById('fontColor').value    = defaults.fontColor;
+      document.getElementById('textAlign').value    = defaults.textAlign;
+      document.getElementById('lineHeight').value   = defaults.lineHeight;
+      document.getElementById('posY').value         = defaults.posY;
+      document.getElementById('posYDisplay').textContent = defaults.posY;
+
+      this.filter = { preset: 'none', brightness: 100, contrast: 100, saturate: 100 };
+      document.querySelectorAll('.filter-preset-btn').forEach(b => b.classList.toggle('active', b.dataset.filter === 'none'));
+      document.getElementById('filterBrightness').value = 100; document.getElementById('brightnessValue').textContent = 100;
+      document.getElementById('filterContrast').value = 100;   document.getElementById('contrastValue').textContent = 100;
+      document.getElementById('filterSaturate').value = 100;   document.getElementById('saturateValue').textContent = 100;
+
+      this.changeEmotion(defaults.emotion);
+      document.getElementById('emotionSelect').value = defaults.emotion;
+
+      StorageManager.clear();
+      this.autoResizeTextarea(document.getElementById('textInput'));
+      this.history.push(defaults.text);
+      this.updateUndoRedoButtons();
+      this.scheduleDraw();
+      this.updateFontPreview();
+
+      const btn = document.getElementById('resetSettingsBtn');
+      this.showButtonFeedback(btn, '✅ 已恢复默认', 'success');
+    }
+
+    downloadImage() {
+      const loading = document.getElementById('globalLoading');
+      loading.classList.add('show');
+      setTimeout(() => {
+        const emotion = this.currentEmotion.replace('.png', '').replace(/[^\w\u4e00-\u9fa5]/g, '_');
+        const link = document.createElement('a');
+        link.download = `[anan.xia.kim]夏目安安_${emotion}_${Date.now()}.png`;
+        link.href = this.canvas.toDataURL('image/png');
+        link.click();
+        loading.classList.remove('show');
+      }, 100);
+    }
+
+    async copyToClipboard() {
+      const btn = document.getElementById('copyBtn');
+      if (!navigator.clipboard || !navigator.clipboard.write) {
+        this.showButtonFeedback(btn, '❌ 浏览器不支持', 'error');
+        return;
+      }
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = '复制中...';
+      try {
+        const blob = await new Promise(resolve => this.canvas.toBlob(resolve, 'image/png'));
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+        this.showButtonFeedback(btn, '✅ 已复制！可直接粘贴', 'success');
+      } catch (err) {
+        const msg = (err.name === 'NotAllowedError' || err.name === 'SecurityError') ? '❌ 需要权限' : '❌ 复制失败';
+        this.showButtonFeedback(btn, msg, 'error');
+      } finally {
+        btn.disabled = false;
+        setTimeout(() => { btn.classList.remove('success', 'error'); btn.textContent = originalText; }, 2500);
+      }
+    }
+
+    showButtonFeedback(btn, text, cssClass) {
+      const original = btn.textContent;
+      btn.classList.add(cssClass);
+      btn.textContent = text;
+      setTimeout(() => { btn.classList.remove(cssClass); btn.textContent = original; }, 2000);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    window.app = new AnanMemeGenerator();
+  });
+</script>
+
+<script defer src="https://analytics.xiau.net/script.js" data-website-id="9d625668-da70-4ea9-b4e8-61748ae67c17"></script>
+
+<script>
+  (function() {
+    const DISMISSED_KEY = 'ananInstallDismissed';
+    const banner = document.getElementById('installBanner');
+    const installBtn = document.getElementById('installBtn');
+    const dismissBtn = document.getElementById('installDismiss');
+    const iosModal = document.getElementById('iosInstallModal');
+    const iosClose = document.getElementById('iosInstallClose');
+
+    let deferredPrompt = null;
+
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+      || window.navigator.standalone === true;
+
+    if (isStandalone || localStorage.getItem(DISMISSED_KEY)) return;
+
+    const ua = navigator.userAgent;
+    const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      setTimeout(() => banner.classList.add('show'), 3000);
+    });
+
+    if (isIOS && !isStandalone) {
+      setTimeout(() => banner.classList.add('show'), 3000);
+    }
+
+    installBtn.addEventListener('click', async () => {
+      if (isIOS) {
+        banner.classList.remove('show');
+        iosModal.classList.add('show');
+        return;
+      }
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        deferredPrompt = null;
+        banner.classList.remove('show');
+        if (outcome === 'accepted') localStorage.setItem(DISMISSED_KEY, '1');
+      }
+    });
+
+    dismissBtn.addEventListener('click', () => {
+      banner.classList.remove('show');
+      localStorage.setItem(DISMISSED_KEY, '1');
+    });
+
+    iosClose.addEventListener('click', () => {
+      iosModal.classList.remove('show');
+      localStorage.setItem(DISMISSED_KEY, '1');
+    });
+    iosModal.addEventListener('click', (e) => {
+      if (e.target === iosModal) {
+        iosModal.classList.remove('show');
+        localStorage.setItem(DISMISSED_KEY, '1');
+      }
+    });
+  })();
+</script>
+
+</body>
+</html>

@@ -3,976 +3,61 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>安安的举画板表情包生成器</title>
+
+  <!-- 基础 SEO -->
+  <meta name="description" content="夏目安安举画板表情包生成器，支持自定义文字、颜色、字体、滤镜效果，一键生成并保存表情包图片。">
+  <meta name="keywords" content="夏目安安,表情包,生成器,举画板,meme,表情包制作,自定义表情">
+  <meta name="author" content="爱吃香咕的/夏的博客 xiau.net">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#1a1a1a">
+
+  <!-- Open Graph微信/QQ/Discord分享预览-->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="安安的举画板表情包生成器">
+  <meta property="og:description" content="自定义文字、颜色、字体、滤镜，一键生成安安举画板表情包！">
+  <meta property="og:image" content="favicon.ico">
+  <meta property="og:url" content="https://anan.xia.kim">
+  <meta property="og:site_name" content="夏的博客">
+  <meta property="og:locale" content="zh_CN">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="安安的举画板表情包生成器">
+  <meta name="twitter:description" content="自定义文字、颜色、字体、滤镜，一键生成安安举画板表情包！">
+  <meta name="twitter:image" content="favicon.ico">
+
+  <!-- PWA / 移动端 -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="安安表情包">
+  <meta name="application-name" content="安安表情包生成器">
+  <meta name="format-detection" content="telephone=no">
+
+  <link rel="icon" href="favicon.ico?v=20260818-1">
+
+  <!-- 字体资源 -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&family=ZCOOL+KuaiLe&family=Noto+Color+Emoji&display=swap" rel="stylesheet">
-  <style>
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
-    
-    body {
-        font-family: 'Noto Sans SC', 'Noto Color Emoji', sans-serif;
-        margin: 0;
-        padding: 45px 15px 15px 15px;
-        min-height: 100vh;
-        background-color: #1a1a1a;
-        background-image: url('mdh.png');
-        background-size: cover;
-        background-position: center;
-        background-attachment: fixed;
-    }
-    
-    /* 活页环效果 */
-    .binder-rings {
-        position: relative;
-        max-width: 900px;
-        margin: 0 auto;
-        height: 40px;
-        z-index: 10;
-        pointer-events: none;
-        display: flex;
-        justify-content: space-between;
-        padding: 0 20px;
-    }
-    
-    .ring {
-        position: relative;
-        top: 10px;
-        width: 24px;
-        height: 50px;
-        border: 4px solid #666;
-        border-radius: 50%;
-        background: transparent;
-        box-shadow: 
-            inset 2px 2px 4px rgba(0,0,0,0.3),
-            2px 2px 4px rgba(0,0,0,0.4);
-        flex-shrink: 0;
-    }
-    
-    /* 环的下半部分 */
-    .ring::before {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: -4px;
-        right: -4px;
-        bottom: -4px;
-        border: 4px solid #666;
-        border-top: none;
-        border-radius: 0 0 50% 50%;
-        background: linear-gradient(to bottom, #888 0%, #666 100%);
-        z-index: -1;
-    }
-    
-    /* 环的上半部分 */
-    .ring::after {
-        content: '';
-        position: absolute;
-        top: -4px;
-        left: -4px;
-        right: -4px;
-        height: 50%;
-        border: 4px solid #888;
-        border-bottom: none;
-        border-radius: 50% 50% 0 0;
-        background: linear-gradient(to bottom, #aaa 0%, #888 100%);
-        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    }
-    
-    /* 主容器 */
-    .container {
-        position: relative;
-        max-width: 900px;
-        margin: -20px auto 0 auto;
-        background: rgba(255, 255, 255, 0.8);
-        border-radius: 12px;
-        padding: 25px 12px 12px 12px;
-        box-shadow: 0 15px 40px rgba(0,0,0,0.3);
-        border: 2px solid #000;
-        z-index: 5;
-    }
-    
-    h1 {
-        text-align: center;
-        color: #000;
-        margin-bottom: 12px;
-        margin-top: 10px;
-        font-size: clamp(1em, 3.5vw, 1.8em);
-        text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
-        word-break: break-word;
-    }
-    
-    .main-layout {
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-    }
-    
-    @media (min-width: 968px) {
-        .main-layout {
-            display: grid;
-            grid-template-columns: 1fr 350px;
-            gap: 20px;
-            align-items: start;
-        }
-    }
-    
-    .preview-section {
-        order: -1;
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    @media (min-width: 968px) {
-        .preview-section {
-            order: 0;
-            position: sticky;
-            top: 15px;
-        }
-    }
-    
-    /* 画布容器 */
-    .canvas-wrapper {
-        width: 100%;
-        max-width: 400px;
-        aspect-ratio: 541 / 648;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        background: #f0f0f0;
-        border-radius: 12px;
-        padding: 0;
-        box-shadow: inset 0 2px 8px rgba(0,0,0,0.1);
-        border: 2px solid #000;
-        overflow: hidden;
-        position: relative;
-    }
-    
-    .canvas-container {
-        position: relative;
-        width: 100%;
-        height: 100%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-    
-    canvas {
-        max-width: 100%;
-        max-height: 100%;
-        width: auto !important;
-        height: auto !important;
-        display: block;
-        border-radius: 8px;
-    }
-    
-    .preview-controls {
-        width: 100%;
-        max-width: 400px;
-        margin-top: 12px;
-        padding: 12px;
-        background: #f8f9fa;
-        border-radius: 8px;
-        border: 2px solid #000;
-    }
-    
-    .preview-control-group {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-    }
-    
-    .preview-control-label {
-        font-weight: 700;
-        color: #000;
-        font-size: 12px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    
-    .preview-control-value {
-        color: #000;
-        font-size: 13px;
-        font-weight: bold;
-    }
-    
-    .preview-slider {
-        width: 100%;
-        height: 5px;
-        border-radius: 3px;
-        background: #ccc;
-        outline: none;
-        -webkit-appearance: none;
-    }
-    
-    .preview-slider::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 16px;
-        height: 16px;
-        border-radius: 50%;
-        background: #333;
-        cursor: pointer;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
-    
-    .preview-slider::-moz-range-thumb {
-        width: 16px;
-        height: 16px;
-        border-radius: 50%;
-        background: #333;
-        cursor: pointer;
-        border: none;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
-    
-    .position-hint {
-        font-size: 11px;
-        color: #333;
-        margin-top: 6px;
-        font-style: italic;
-        text-align: center;
-    }
-    
-    .controls-section {
-        background: #f8f9fa;
-        padding: 15px;
-        border-radius: 12px;
-        border: 2px solid #000;
-    }
-    
-    .control-group {
-        margin-bottom: 10px;
-    }
-    
-    .control-group label {
-        display: block;
-        margin-bottom: 4px;
-        font-weight: 700;
-        color: #000;
-        font-size: 12px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    
-    textarea {
-        width: 100%;
-        padding: 8px;
-        border: 2px solid #000;
-        border-radius: 6px;
-        font-size: 14px;
-        resize: vertical;
-        min-height: 60px;
-        max-height: 120px;
-        transition: all 0.3s;
-        font-family: inherit;
-        overflow-y: auto;
-        background: #fff;
-        color: #000;
-    }
-    
-    textarea:focus {
-        outline: none;
-        border-color: #000;
-        box-shadow: 0 0 0 3px rgba(0,0,0,0.1);
-    }
-    
-    select, input[type="number"] {
-        width: 100%;
-        padding: 6px;
-        border: 2px solid #000;
-        border-radius: 6px;
-        font-size: 13px;
-        background: #fff;
-        cursor: pointer;
-        transition: all 0.3s;
-        color: #000;
-        height: 36px;
-    }
-    
-    select:focus, input:focus {
-        outline: none;
-        border-color: #000;
-    }
-    
-    input[type="color"] {
-        width: 100%;
-        height: 36px;
-        padding: 2px;
-        border: 2px solid #000;
-        border-radius: 6px;
-        background: #fff;
-        cursor: pointer;
-        -webkit-appearance: none;
-        appearance: none;
-    }
-    
-    input[type="color"]::-webkit-color-swatch-wrapper {
-        padding: 0;
-    }
-    
-    input[type="color"]::-webkit-color-swatch {
-        border: none;
-        border-radius: 4px;
-    }
-    
-    .file-input-wrapper {
-        position: relative;
-        overflow: hidden;
-        display: inline-block;
-        width: 100%;
-    }
-    
-    .file-input-wrapper input[type=file] {
-        position: absolute;
-        left: -9999px;
-    }
-    
-    .file-input-label {
-        display: block;
-        padding: 8px;
-        background: #333;
-        color: #fff;
-        text-align: center;
-        border-radius: 6px;
-        cursor: pointer;
-        transition: all 0.2s;
-        font-weight: 600;
-        font-size: 13px;
-        border: 2px solid #333;
-        height: 36px;
-        line-height: 18px;
-    }
-    
-    .file-input-label:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        background: #555;
-    }
-    
-    .download-btn {
-        width: 100%;
-        padding: 10px;
-        background: #333;
-        color: #fff;
-        border: 2px solid #333;
-        border-radius: 8px;
-        font-size: 14px;
-        font-weight: 700;
-        cursor: pointer;
-        transition: all 0.3s;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        margin-top: 8px;
-        height: 44px;
-    }
-    
-    .download-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-        background: #555;
-    }
-    
-    .copy-btn {
-        width: 100%;
-        padding: 10px;
-        background: #333;
-        color: #fff;
-        border: 2px solid #333;
-        border-radius: 8px;
-        font-size: 14px;
-        font-weight: 700;
-        cursor: pointer;
-        transition: all 0.3s;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        margin-top: 8px;
-        height: 44px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-    }
-    
-    .copy-btn:hover:not(:disabled) {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-        background: #555;
-    }
-    
-    .copy-btn.success {
-        background: #2ecc71;
-        border-color: #27ae60;
-    }
-    
-    .copy-btn.error {
-        background: #e74c3c;
-        border-color: #c0392b;
-    }
-    .welcome-box {
-        background: #fff;
-        border-left: 3px solid #000;
-        padding: 8px 10px;
-        border-radius: 4px;
-        margin-bottom: 10px;
-        font-size: 13px;
-        color: #000;
-        border: 2px solid #000;
-        text-align: center;
-        font-weight: 600;
-    }
-    
-    .toggle-wrapper {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 8px;
-        background: #fff;
-        border-radius: 6px;
-        border: 2px solid #000;
-        margin-bottom: 8px;
-    }
-    
-    .toggle-switch {
-        position: relative;
-        width: 40px;
-        height: 22px;
-        background: #ccc;
-        border-radius: 11px;
-        cursor: pointer;
-        transition: background 0.3s;
-        flex-shrink: 0;
-    }
-    
-    .toggle-switch.active {
-        background: #333;
-    }
-    
-    .toggle-switch::after {
-        content: '';
-        position: absolute;
-        width: 18px;
-        height: 18px;
-        background: #fff;
-        border-radius: 50%;
-        top: 2px;
-        left: 2px;
-        transition: transform 0.3s;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
-    
-    .toggle-switch.active::after {
-        transform: translateX(18px);
-    }
-    
-    .board-preview {
-        margin-top: 6px;
-        padding: 6px;
-        background: #fff;
-        border-radius: 6px;
-        border: 2px dashed #000;
-        text-align: center;
-        font-size: 11px;
-        color: #333;
-    }
-    
-    .warning-box {
-        background: #fff;
-        border-left: 3px solid #000;
-        padding: 8px;
-        border-radius: 4px;
-        margin-bottom: 10px;
-        font-size: 12px;
-        color: #000;
-        display: none;
-        border: 2px solid #000;
-    }
-    
-    .warning-box.show {
-        display: block;
-    }
-    
-    .loading {
-        display: none;
-        text-align: center;
-        padding: 12px;
-        color: #000;
-        font-weight: 600;
-    }
-    
-    .spinner {
-        display: inline-block;
-        width: 18px;
-        height: 18px;
-        border: 3px solid #f3f3f3;
-        border-top: 3px solid #333;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-        margin-right: 8px;
-    }
-    
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-    
-    .effect-btn {
-        display: block;
-        width: 100%;
-        padding: 8px;
-        background: #333;
-        color: #fff;
-        border: 2px solid #333;
-        border-radius: 6px;
-        font-size: 13px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s;
-        margin-top: 0;
-        height: 36px;
-        line-height: 18px;
-    }
-    
-    .effect-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        background: #555;
-    }
-    
-    .effect-modal {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0,0,0,0.5);
-        z-index: 1000;
-        align-items: center;
-        justify-content: center;
-        padding: 10px;
-    }
-    
-    .effect-modal.show {
-        display: flex;
-    }
-    
-    .effect-content {
-        background: #fff;
-        border-radius: 12px;
-        padding: 15px;
-        max-width: 450px;
-        width: 100%;
-        max-height: 80vh;
-        overflow-y: auto;
-        box-shadow: 0 15px 40px rgba(0,0,0,0.4);
-        border: 2px solid #000;
-    }
-    
-    .effect-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 15px;
-        padding-bottom: 12px;
-        border-bottom: 2px solid #000;
-    }
-    
-    .effect-title {
-        font-size: 16px;
-        font-weight: 700;
-        color: #000;
-    }
-    
-    .effect-close {
-        background: none;
-        border: none;
-        font-size: 22px;
-        cursor: pointer;
-        color: #000;
-        padding: 0;
-        width: 28px;
-        height: 28px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 50%;
-        transition: all 0.2s;
-    }
-    
-    .effect-close:hover {
-        background: #f0f0f0;
-        color: #000;
-    }
-    
-    .effect-section {
-        margin-bottom: 15px;
-    }
-    
-    .effect-section-title {
-        font-size: 13px;
-        font-weight: 600;
-        color: #000;
-        margin-bottom: 8px;
-        text-transform: uppercase;
-    }
-    
-    .effect-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 6px;
-    }
-    
-    .effect-item {
-        padding: 8px 4px;
-        background: #fff;
-        border: 2px solid #000;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 11px;
-        text-align: center;
-        transition: all 0.2s;
-        color: #000;
-    }
-    
-    .effect-item:hover {
-        background: #f0f0f0;
-        transform: translateY(-2px);
-    }
-    
-    .effect-item.style-strike { text-decoration: line-through; }
-    .effect-item.style-underline { text-decoration: underline; }
-    .effect-item.style-bold { font-weight: bold; }
-    .effect-item.style-italic { font-style: italic; }
-    
-    .effect-item.style-magic {
-        background: #333;
-        color: #fff;
-    }
-    
-    .lineheight-input {
-        width: 100%;
-        padding: 6px;
-        border: 2px solid #000;
-        border-radius: 6px;
-        font-size: 13px;
-        background: #fff;
-        transition: all 0.3s;
-        color: #000;
-        height: 36px;
-    }
-    
-    .lineheight-input:focus {
-        outline: none;
-        border-color: #000;
-    }
-    
-    /* 行间距和字体颜色并排 */
-    .row-controls {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-        margin-bottom: 10px;
-    }
-    
-    /* 字体大小和文字对齐并排 */
-    .text-controls-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-        align-items: end;
-        margin-top: 8px;
-    }
-    
-    .text-controls-row .control-group {
-        margin-bottom: 0;
-    }
-    
-    /* 自定义图片控制区域 */
-    .custom-image-controls {
-        background: #e9ecef;
-        border-radius: 10px;
-        padding: 10px;
-        margin-top: 0;
-        margin-bottom: 10px;
-        color: #000;
-        border: 2px solid #000;
-    }
-    
-    .custom-image-controls .control-label {
-        font-weight: 600;
-        margin-bottom: 6px;
-        font-size: 12px;
-        display: flex;
-        align-items: center;
-        gap: 4px;
-    }
-    
-    .custom-image-row {
-        display: grid;
-        grid-template-columns: 1fr auto auto;
-        gap: 6px;
-        align-items: center;
-    }
-    
-    .custom-image-btn {
-        background: #000000;
-        color: #fff;
-        border: 2px solid #000000;
-        padding: 6px 10px;
-        border-radius: 6px;
-        cursor: pointer;
-        font-weight: 600;
-        font-size: 12px;
-        transition: all 0.3s;
-        white-space: nowrap;
-        height: 36px;
-        line-height: 22px;
-    }
-    
-    .custom-image-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        background: #000000;
-    }
-    
-    .custom-image-btn.remove {
-        background: #000000;
-        color: #fff;
-        border: 2px solid #000000;
-        padding: 6px 8px;
-    }
-    
-    .image-align-select {
-        padding: 6px;
-        border-radius: 6px;
-        border: 2px solid #000;
-        background: #fff;
-        color: #000;
-        font-weight: 600;
-        cursor: pointer;
-        min-width: 80px;
-        height: 36px;
-        font-size: 12px;
-    }
-    
-    .image-preview-name {
-        font-size: 11px;
-        color: #000000;
-        margin-top: 4px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-    
-    .zoom-control {
-        margin-top: 8px;
-        background: rgba(0,0,0,0.1);
-        padding: 8px;
-        border-radius: 6px;
-        border: 1px solid rgba(0,0,0,0.2);
-    }
-    
-    .zoom-control-label {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 4px;
-        font-size: 12px;
-        font-weight: 600;
-    }
-    
-    .zoom-value {
-        background: rgba(0,0,0,0.15);
-        padding: 2px 6px;
-        border-radius: 4px;
-        font-size: 11px;
-        min-width: 40px;
-        text-align: center;
-    }
-    
-    .zoom-slider {
-        width: 100%;
-        height: 5px;
-        border-radius: 3px;
-        background: rgba(0,0,0,0.2);
-        outline: none;
-        -webkit-appearance: none;
-    }
-    
-    .zoom-slider::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 16px;
-        height: 16px;
-        border-radius: 50%;
-        background: #333;
-        cursor: pointer;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-        transition: transform 0.2s;
-    }
-    
-    .zoom-slider::-webkit-slider-thumb:hover {
-        transform: scale(1.1);
-    }
-    
-    .zoom-slider::-moz-range-thumb {
-        width: 16px;
-        height: 16px;
-        border-radius: 50%;
-        background: #333;
-        cursor: pointer;
-        border: none;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-    }
-    
-    .zoom-hint {
-        font-size: 10px;
-        color: #555;
-        margin-top: 4px;
-        text-align: center;
-    }
-    
-    /* 按钮组布局 */
-    .compact-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-        margin-bottom: 10px;
-    }
-    
-    .compact-row .control-group {
-        margin-bottom: 0;
-    }
-    
-    /* 按钮组样式 */
-    .action-buttons {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-        margin-top: 8px;
-    }
-    
-    .action-buttons .download-btn,
-    .action-buttons .copy-btn {
-        margin-top: 0;
-    }
-    
-    @media (max-width: 600px) {
-        body {
-            padding: 45px 8px 8px 8px;
-        }
-        
-        .container {
-            padding: 20px 10px 10px 10px;
-            margin-top: -15px;
-        }
-        
-        .controls-section {
-            padding: 12px;
-        }
-        
-        .effect-grid {
-            grid-template-columns: repeat(3, 1fr);
-        }
-        
-        .preview-controls {
-            max-width: 100%;
-        }
-    
-        .ring {
-            width: 18px;
-            height: 40px;
-            border-width: 3px;
-        }
-    
-        .ring::before,
-        .ring::after {
-            border-width: 3px;
-        }
-    
-        .binder-rings {
-            padding: 0 10px;
-        }
-    
-        .row-controls {
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-        }
-    
-        .text-controls-row {
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-        }
-    
-        .custom-image-row {
-            grid-template-columns: 1fr auto auto;
-            gap: 6px;
-        }
-    
-        .compact-row {
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-        }
-    
-        .action-buttons {
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-        }
-    
-        .control-group {
-            margin-bottom: 8px;
-        }
-    
-        h1 {
-            font-size: clamp(0.9em, 4vw, 1.5em);
-            margin-bottom: 8px;
-        }
-    }
-    
-    @media (max-width: 380px) {
-        .custom-image-row {
-            grid-template-columns: 1fr;
-            gap: 6px;
-        }
-    
-        .custom-image-btn.remove {
-            width: 100%;
-        }
-    
-        .image-align-select {
-            width: 100%;
-        }
-    
-        .compact-row {
-            grid-template-columns: 1fr;
-        }
-    
-        .text-controls-row {
-            grid-template-columns: 1fr;
-        }
-    
-        .row-controls {
-            grid-template-columns: 1fr;
-        }
-    
-        .action-buttons {
-            grid-template-columns: 1fr;
-        }
-    }
-  </style>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet"></noscript>
+
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap" as="style"
+    onload="this.onload=null;this.rel='stylesheet';(window._emojiFontCssResolve&&window._emojiFontCssResolve());">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap" rel="stylesheet"></noscript>
+  <script src="assets/js/font-loader.js?v=20260818-1"></script>
+  <link rel="preload" href="assets/images/bg.png?v=20260818-1" as="image" fetchpriority="low">
+  <link rel="preload" href="anans/开心.png?v=20260818-1" as="image" fetchpriority="high">
+  <link rel="preload" href="anans/AnAn2.png?v=20260818-1" as="image" fetchpriority="high">
+
+  <link rel="stylesheet" href="assets/css/style.css?v=20260818-1">
 </head>
 <body>
-  <!-- 活页环 -->
+
   <div class="binder-rings">
     <div class="ring"></div>
     <div class="ring"></div>
@@ -983,32 +68,149 @@
     <div class="ring"></div>
     <div class="ring"></div>
   </div>
+
+  <div class="loading-overlay" id="globalLoading">
+    <div class="loading-content">
+      <div class="spinner"></div>
+      <div id="loadingText">处理中...</div>
+    </div>
+  </div>
+
   <div class="container">
-    <h1>🎨安安举画板表情包生成器</h1>
+    <h1>🎨 安安举画板表情包生成器</h1>
+
     <div class="main-layout">
+
       <div class="preview-section">
-        <div class="canvas-wrapper">
-          <div class="canvas-container">
-            <canvas id="canvas" width="541" height="648"></canvas>
+        <a class="changelog-inline-btn legacy-version-btn" href="old/index.html">新版用不惯？点我返回更简单的旧版</a>
+        <div class="filter-box preview-filter-box" id="filterBox">
+          <div class="box-label" id="filterToggle">
+            <span>🎨 图片滤镜</span>
+            <span class="filter-toggle-arrow">▼</span>
+          </div>
+          <div class="filter-body">
+            <div class="filter-presets">
+              <button class="filter-preset-btn active" data-filter="none">原图</button>
+              <button class="filter-preset-btn" data-filter="grayscale">灰度</button>
+              <button class="filter-preset-btn" data-filter="sepia">复古</button>
+              <button class="filter-preset-btn" data-filter="warm">暖色</button>
+              <button class="filter-preset-btn" data-filter="cool">冷色</button>
+              <button class="filter-preset-btn" data-filter="vivid">鲜艳</button>
+            </div>
+            <div class="filter-slider-row">
+              <label>亮度</label>
+              <input type="range" id="filterBrightness" min="50" max="150" value="100">
+              <span id="brightnessValue">100</span>
+            </div>
+            <div class="filter-slider-row">
+              <label>对比度</label>
+              <input type="range" id="filterContrast" min="50" max="200" value="100">
+              <span id="contrastValue">100</span>
+            </div>
+            <div class="filter-slider-row">
+              <label>饱和度</label>
+              <input type="range" id="filterSaturate" min="0" max="300" value="100">
+              <span id="saturateValue">100</span>
+            </div>
           </div>
         </div>
+
+        <div class="workspace-actions focus-hide">
+          <button class="workspace-action primary" id="paintModeBtn" type="button">✏️ 绘画模式！在安安的画板上画画！支援数位笔</button>
+        </div>
+
+        <section class="layer-box focus-hide" id="layerBox" aria-label="图层面板">
+          <div class="layer-box-header" id="layerBoxHeader" role="button" tabindex="0" aria-expanded="false">
+            <span>🗂️ 图层 <small class="muted-inline">· 从上到下合成</small></span>
+            <span class="layer-count" id="layerCount">4</span>
+          </div>
+          <div class="layer-box-body">
+            <div class="layer-list" id="layerList"></div>
+            <div class="layer-controls">
+              <div>
+                <div class="layer-opacity-label"><span>不透明度</span><span id="layerOpacityValue">100%</span></div>
+                <input class="layer-opacity" id="layerOpacity" type="range" min="0" max="100" value="100">
+              </div>
+              <div class="layer-mini-actions">
+                <button class="layer-mini-btn" id="centerLayerBtn" type="button" title="将选中图层移回画板中心">居中</button>
+                <button class="layer-mini-btn" id="resetTransformBtn" type="button" title="重置选中图层的缩放和旋转">重置</button>
+                <button class="layer-mini-btn" id="duplicateLayerBtn" type="button" title="复制选中图层">复制</button>
+                <button class="layer-mini-btn" id="deleteLayerBtn" type="button" title="删除选中图层">删除</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="focus-mode-row" id="focusModeRow">
+          <span class="focus-mode-label">📝 纯文本编辑模式</span>
+          <div class="focus-mode-toggle" id="focusModeToggle"></div>
+        </div>
+        
+        <div class="canvas-wrapper" id="canvasWrapper">
+          <canvas id="canvas" width="541" height="648"></canvas>
+          <canvas id="interactionCanvas" width="541" height="648" aria-label="图层移动与自由变换操作区"></canvas>
+        </div>
+        <div class="transform-hint focus-hide">拖动图层移动 · 拖动边角自由缩放 · 顶部圆点旋转 · Shift 约束比例/角度</div>
+
         <div class="preview-controls">
           <div class="preview-control-group">
             <div class="preview-control-label">
-              <span>垂直位置微调</span>
-              <span class="preview-control-value" id="previewPosYValue">466</span>
+              <span>文字图层 Y 坐标</span>
+              <span class="preview-control-value" id="posYDisplay">452</span>
             </div>
-            <input type="range" id="posY" min="466" max="620" value="466" class="preview-slider">
-            <div class="position-hint" style="margin-top: 5px; text-align: left;">越大越靠下</div>
+            <input type="range" id="posY" min="0" max="648" value="452" class="preview-slider">
+            <div class="position-hint">也可直接在画布上拖动</div>
+          </div>
+          <div class="preview-control-group initially-hidden image-pos-group" id="imagePosYGroup">
+            <div class="preview-control-label">
+              <span>图片图层 Y 坐标</span>
+              <span class="preview-control-value" id="imagePosYDisplay">530</span>
+            </div>
+            <input type="range" id="imagePosY" min="0" max="648" value="530" class="preview-slider">
+            <div class="position-hint">也可直接在画布上拖动</div>
           </div>
         </div>
+
+        <div class="undo-redo-row preview-history-row">
+          <button class="btn" id="undoBtn" disabled>↩ 撤销 (Ctrl+Z)</button>
+          <button class="btn" id="redoBtn" disabled>↪ 重做 (Ctrl+Y)</button>
+        </div>
       </div>
+
       <div class="controls-section">
-        <div class="welcome-box">👋 欢迎使用</div>
-        <!-- 选择表情 -->
+
+        <div class="row-2col">
+          <button class="btn" id="effectBtn">✨ 自定义文字效果</button>
+          <button class="btn" id="presetBtn">📋 预设文字(有更新)</button>
+        </div>
+
+        <div class="text-layer-toolbar">
+          <span class="active-text-layer" id="activeTextLayerName">📝 空白文字</span>
+          <button class="text-layer-btn primary" id="addTextLayerBtn" type="button">➕ 添加文字</button>
+          <button class="text-layer-btn" id="duplicateTextLayerBtn" type="button">复制</button>
+          <button class="text-layer-btn" id="deleteTextLayerBtn" type="button" disabled>删除</button>
+        </div>
+
+        <div class="control-group">
+          <label>输入文字内容 (支持 Emoji)</label>
+          <textarea id="textInput" placeholder="在这里输入你想显示在画板上的文字..."></textarea>
+        </div>
+
+        <div class="settings-row">
+          <button class="btn" id="saveSettingsBtn">💾 保存修改</button>
+          <button class="btn" id="resetSettingsBtn">🔄 长按清空保存项</button>
+        </div>
+        <div class="project-save-status" id="projectSaveStatus">修改会保存在当前浏览器</div>
+        <div class="project-file-tools focus-hide">
+          <button class="project-file-btn" id="exportProjectBtn" type="button">⬇️ 导出工程备份</button>
+          <button class="project-file-btn" id="importProjectBtn" type="button">⬆️ 导入工程备份</button>
+        </div>
+        <input type="file" id="importProjectInput" class="hidden-file-input" accept=".anan,.json,application/json">
+        <div class="long-press-hint" id="longPressHint">准备恢复默认设置/文字...</div>
+
         <div class="control-group">
           <label>选择表情</label>
-          <select id="emotionSelect" onchange="changeEmotion(this.value)">
+          <select id="emotionSelect">
             <option value="开心.png">😊 开心的吾辈</option>
             <option value="闭眼.png">😌 闭眼的吾辈</option>
             <option value="病娇.png">🥰 病娇的吾辈</option>
@@ -1023,764 +225,393 @@
             <option value="无语.png">😑 无语的吾辈</option>
             <option value="custom">➕ 自定义图片...</option>
           </select>
-          <input type="file" id="customEmotionInput" accept="image/*" style="display: none;" onchange="handleCustomEmotion(event)">
+          <input type="file" id="customEmotionInput" class="hidden-file-input" accept="image/*">
         </div>
-        <!-- 自定义画板图片 -->
-        <div class="custom-image-controls" id="customImageControls">
-          <div class="control-label"> 🖼️ 自定义画板图片 </div>
+
+        <div class="custom-image-box focus-hide">
+          <div class="box-label">🖼️ 图片图层 <span class="muted-inline">· 可添加多张</span></div>
           <div class="custom-image-row">
-            <button class="custom-image-btn" id="addImageBtn" onclick="document.getElementById('customImageInput').click()"> ➕ 添加图片 </button>
-            <select class="image-align-select" id="imageAlign" onchange="updateImageAlign()">
-              <option value="center">居中</option>
-              <option value="left">左对齐</option>
-              <option value="right">右对齐</option>
-            </select>
-            <button class="custom-image-btn remove" id="removeImageBtn" onclick="removeCustomImage()" style="display: none;"> 🗑️ </button>
+            <button class="custom-image-btn" id="addImageBtn">➕ 添加图层</button>
+            <button class="custom-image-btn initially-hidden" id="removeImageBtn">🗑️ 移除当前</button>
           </div>
-          <div class="image-preview-name" id="imagePreviewName">未添加图片</div>
-          <div class="zoom-control" id="zoomControl" style="display: none;">
-            <div class="zoom-control-label">
-              <span>🔍 缩放</span>
-              <span class="zoom-value" id="zoomValue">100%</span>
-            </div>
-            <input type="range" id="zoomSlider" class="zoom-slider" min="20" max="200" value="100" oninput="updateZoom(this.value)">
-          </div>
-          <input type="file" id="customImageInput" accept="image/*" style="display: none;" onchange="handleCustomImage(event)">
-        </div>
-        <!-- 自定义文字效果 -->
-        <div class="control-group" style="margin-bottom: 10px;">
-          <button class="effect-btn" onclick="openEffectModal()">✨ 自定义文字效果</button>
-        </div>
-        <div class="warning-box" id="overflowWarning">⚠️ 文字内容可能超出画板空间，建议修改字号和行间距</div>
-        <!-- 输入文字内容 -->
-        <div class="control-group">
-          <label>输入文字内容 (支持 Emoji)</label>
-          <textarea id="textInput" placeholder="在这里输入你想显示在画板上的文字..." oninput="autoResizeTextarea(this)">[黄色开始]示例文字[黄色结束]
-[洗脑魔法开始]给我次香咕[洗脑魔法结束]
-[下划线开始]给我次香咕[下划线结束]
-[红色开始][删除线开始]多重效果[删除线结束][红色结束]</textarea>
-          <!-- 字体大小和文字对齐并排 -->
-          <div class="text-controls-row">
-            <div class="control-group">
-              <label style="margin-bottom: 4px; font-size: 11px;">字体大小 (px)</label>
-              <input type="number" id="fontSize" value="32" min="12" max="200" style="width: 100%; height: 36px;">
-            </div>
-            <div class="control-group">
-              <label style="margin-bottom: 4px; font-size: 11px;">文字对齐</label>
-              <select id="textAlign" style="width: 100%;">
-                <option value="center">居中</option>
-                <option value="left">左对齐</option>
-                <option value="right">右对齐</option>
-              </select>
+          <div class="image-filename" id="imageFilename">未添加图片</div>
+          <div class="image-layout-box initially-hidden" id="imageLayoutBox">
+            <div class="row-3col">
+              <div class="control-group">
+                <label>图片对齐</label>
+                <select id="imageAlign">
+                  <option value="center">居中</option>
+                  <option value="left">靠左</option>
+                  <option value="right">靠右</option>
+                </select>
+              </div>
+              <div class="control-group">
+                <label>旋转角度</label>
+                <input type="number" id="imageRotation" value="0" min="-180" max="180" step="1">
+              </div>
+              <div class="control-group">
+                <label>图片大小</label>
+                <div class="zoom-input-wrapper">
+                  <input type="number" id="zoomInput" value="100" min="1" max="1200">
+                  <span class="zoom-percent">%</span>
+                </div>
+              </div>
             </div>
           </div>
+          <input type="file" id="customImageInput" class="hidden-file-input" accept="image/*">
         </div>
-        <!-- 字体选择 -->
+
+        <div class="warning-box focus-hide" id="overflowWarning">⚠️ 文字内容可能超出画板空间，建议修改字号和行间距</div>
+
         <div class="control-group">
           <label>字体选择</label>
           <select id="fontFamily">
             <option value="'Noto Sans SC', 'Noto Color Emoji', sans-serif">默认字体 (Noto Sans SC)</option>
-            <option value="'ZCOOL KuaiLe', 'Noto Color Emoji', cursive">快乐体</option>
-            <option value="Arial, 'Noto Color Emoji', sans-serif">Arial</option>
-            <option value="'Microsoft YaHei', 'Noto Color Emoji', sans-serif">微软雅黑</option>
-            <option value="'SimHei', 'Noto Color Emoji', sans-serif">黑体</option>
-            <option value="'SimSun', 'Noto Color Emoji', serif">宋体</option>
-            <option value="'KaiTi', 'Noto Color Emoji', serif">楷体</option>
+            <optgroup label="🌸 可爱手写字体">
+              <option value="'ZCOOL KuaiLe', 'Noto Color Emoji', cursive">🎉 站酷快乐体（圆润可爱）</option>
+              <option value="'Ma Shan Zheng', 'Noto Color Emoji', cursive">✍️ 马善政毛笔楷体（手写感）</option>
+              <option value="'Long Cang', 'Noto Color Emoji', cursive">🖋️ 龙藏体（潦草手写）</option>
+              <option value="'Zhi Mang Xing', 'Noto Color Emoji', cursive">🌊 知芒行（飘逸行草）</option>
+              <option value="'Liu Jian Mao Cao', 'Noto Color Emoji', cursive">🐱 流墨毛草（狂野草书）</option>
+            </optgroup>
+            <optgroup label="📖 文艺衬线字体">
+              <option value="'ZCOOL XiaoWei', 'Noto Color Emoji', serif">🌸 站酷小薇体（清秀文艺）</option>
+              <option value="'SimSun', 'Noto Color Emoji', serif">宋体</option>
+              <option value="'KaiTi', 'Noto Color Emoji', serif">楷体</option>
+            </optgroup>
+            <optgroup label="🖥️ 系统字体">
+              <option value="Arial, 'Noto Color Emoji', sans-serif">Arial</option>
+              <option value="'Microsoft YaHei', 'Noto Color Emoji', sans-serif">微软雅黑</option>
+              <option value="'SimHei', 'Noto Color Emoji', sans-serif">黑体</option>
+            </optgroup>
             <option value="custom">➕ 自定义字体...</option>
           </select>
-          <input type="file" id="customFontInput" accept=".ttf,.otf,.woff,.woff2" style="display: none;">
+          <div class="font-preview" id="fontPreview">预览：糯米？!樱桃？！柠檬？！～ 🍬✨</div>
+          <input type="file" id="customFontInput" class="hidden-file-input" accept=".ttf,.otf,.woff,.woff2">
         </div>
-        <!-- 行间距和字体颜色并排 -->
-        <div class="row-controls">
-          <div class="control-group" style="margin-bottom: 0;">
-            <label>行间距 (倍数)</label>
-            <input type="number" id="lineHeight" class="lineheight-input" value="1.2" min="1.0" max="3.0" step="0.1">
+
+        <div class="row-3col">
+          <div class="control-group">
+            <label>字体大小 (px)</label>
+            <input type="number" id="fontSize" value="32" min="8" max="120" step="1">
           </div>
-          <div class="control-group" style="margin-bottom: 0;">
+          <div class="control-group">
+            <label>行间距 (倍数)</label>
+            <input type="number" id="lineHeight" value="1.0" min="1.0" max="3.0" step="0.1">
+          </div>
+          <div class="control-group">
             <label>默认字体颜色</label>
             <input type="color" id="fontColor" value="#2c3e50">
           </div>
         </div>
-        <div class="loading" id="loading"><span class="spinner"></span>正在生成图片...</div>
-        <!-- 下载和复制按钮并排 -->
-        <div class="action-buttons">
-          <button class="download-btn" onclick="downloadImage()">⬇️ 保存图片</button>
-          <button class="copy-btn" id="copyBtn" onclick="copyToClipboard()">📋 保存到粘贴板</button>
+
+        <div class="control-group">
+          <label>文字对齐</label>
+          <select id="textAlign">
+            <option value="center">居中</option>
+            <option value="left">左对齐</option>
+            <option value="right">右对齐</option>
+          </select>
         </div>
-        <!-- 移动端提示 -->
-        <div id="mobileWarning" style="display: none; margin-top: 10px; padding: 10px; background: #fff3f3; border: 2px solid #e74c3c; border-radius: 8px; color: #c0392b; font-size: 12px; line-height: 1.6;">
+
+        <div class="row-2col">
+          <button class="btn btn-large" id="downloadBtn">⬇️ 保存图片</button>
+          <button class="btn btn-large" id="copyBtn">📋 复制到剪贴板</button>
+        </div>
+
+        <div class="mobile-warning focus-hide" id="mobileWarning">
           ⚠️ 你好像在使用手机/移动平台喵<br>
-          对于手机/移动平台，有些软件是无法支持从粘贴板粘贴图片的，就比如手机QQ就不行，但是手机微信就可以，软件官方不支持我也没办法，对于不支持的手机软件，你可以保存图片手动发送，电脑的软件都支持
+          手机/移动平台的有些软件是不支持从粘贴板粘贴图片的，就比如手机QQ就不行，但是手机微信就可以，这是软件官方不支持我也没办法，对于不支持的手机软件，你可以保存图片手动发送，电脑的软件都支持
+        </div>
+
+        <div class="welcome-box">
+          <span>😋 香咕真的很好吃</span>
+          <button class="changelog-inline-btn" id="whatsNewBtn">✨ V2.0 新功能</button>
+          <button class="changelog-inline-btn" id="changelogBtn">📝 更新日志</button>
         </div>
       </div>
     </div>
   </div>
-  <div class="effect-modal" id="effectModal" onclick="closeEffectModal(event)">
-    <div class="effect-content" onclick="event.stopPropagation()">
+
+  <div class="effect-modal" id="effectModal">
+    <div class="effect-content">
       <div class="effect-header">
         <span class="effect-title">✨ 自定义文字效果</span>
-        <button class="effect-close" onclick="closeEffectModal()">×</button>
+        <button class="effect-close" id="effectClose">×</button>
       </div>
-      <div class="effect-section" style="background: #f8f9fa; padding: 12px; border-radius: 6px; margin-top: 15px;">
-        <div class="effect-section-title">💡 使用说明</div>
-        <div style="font-size: 12px; color: #666; line-height: 1.8;">
-          <p style="margin-bottom: 8px;">点击下方效果按钮插入标记，就比如：</p>
-          <div style="background: #fff; border: 1px solid #ddd; border-radius: 4px; padding: 8px; margin-bottom: 8px; font-family: monospace;">
-            <div>[红色开始]<span style="color: #e74c3c;">这里的文字会显示成红色</span>[红色结束]</div>
-          </div>
-          <p style="margin-bottom: 8px;">支持效果叠加：</p>
-          <div style="background: #fff; border: 1px solid #ddd; border-radius: 4px; padding: 8px; font-family: monospace;">
-            <div>[红色开始][删除线开始]<span style="color: #e74c3c; text-decoration: line-through;">这里的文字会显示成红色，并且带有删除线</span>[删除线结束][红色结束]</div>
-          </div>
-        </div>
+
+      <div class="effect-tip">
+        💡 选中文字之后，点击自定义文字效果，点击你需要的标签，即可为这段文字附着上效果。效果可叠加：<br>
+        <code>[红色开始][删除线开始]<span class="demo-red-strike">红色删除线</span>[删除线结束][红色结束]</code>
       </div>
+
       <div class="effect-section">
         <div class="effect-section-title">🎨 颜色效果</div>
         <div class="effect-grid">
-          <div class="effect-item color-red" onclick="insertEffect('[红色开始]', '[红色结束]')">红色</div>
-          <div class="effect-item color-orange" onclick="insertEffect('[橙色开始]', '[橙色结束]')">橙色</div>
-          <div class="effect-item color-yellow" onclick="insertEffect('[黄色开始]', '[黄色结束]')">黄色</div>
-          <div class="effect-item color-green" onclick="insertEffect('[绿色开始]', '[绿色结束]')">绿色</div>
-          <div class="effect-item color-cyan" onclick="insertEffect('[青色开始]', '[青色结束]')">青色</div>
-          <div class="effect-item color-blue" onclick="insertEffect('[蓝色开始]', '[蓝色结束]')">蓝色</div>
-          <div class="effect-item color-purple" onclick="insertEffect('[紫色开始]', '[紫色结束]')">紫色</div>
-          <div class="effect-item color-pink" onclick="insertEffect('[粉色开始]', '[粉色结束]')">粉色</div>
-          <div class="effect-item color-gray" onclick="insertEffect('[灰色开始]', '[灰色结束]')">灰色</div>
-          <div class="effect-item color-black" onclick="insertEffect('[黑色开始]', '[黑色结束]')">黑色</div>
-          <div class="effect-item color-white" onclick="insertEffect('[白色开始]', '[白色结束]')">白色</div>
-          <div class="effect-item color-brown" onclick="insertEffect('[棕色开始]', '[棕色结束]')">棕色</div>
+          <div class="effect-item color-red"    data-start="[红色开始]"   data-end="[红色结束]">红色文字</div>
+          <div class="effect-item color-orange" data-start="[橙色开始]"   data-end="[橙色结束]">橙色文字</div>
+          <div class="effect-item color-yellow" data-start="[黄色开始]"   data-end="[黄色结束]">黄色文字</div>
+          <div class="effect-item color-green"  data-start="[绿色开始]"   data-end="[绿色结束]">绿色文字</div>
+          <div class="effect-item color-cyan"   data-start="[青色开始]"   data-end="[青色结束]">青色文字</div>
+          <div class="effect-item color-blue"   data-start="[蓝色开始]"   data-end="[蓝色结束]">蓝色文字</div>
+          <div class="effect-item color-purple" data-start="[紫色开始]"   data-end="[紫色结束]">紫色文字</div>
+          <div class="effect-item color-pink"   data-start="[粉色开始]"   data-end="[粉色结束]">粉色文字</div>
+          <div class="effect-item color-gray"   data-start="[灰色开始]"   data-end="[灰色结束]">灰色文字</div>
+          <div class="effect-item color-black"  data-start="[黑色开始]"   data-end="[黑色结束]">黑色文字</div>
+          <div class="effect-item color-brown"  data-start="[棕色开始]"   data-end="[棕色结束]">棕色文字</div>
         </div>
       </div>
+
       <div class="effect-section">
         <div class="effect-section-title">✏️ 文字样式</div>
         <div class="effect-grid">
-          <div class="effect-item style-strike" onclick="insertEffect('[删除线开始]', '[删除线结束]')">删除线</div>
-          <div class="effect-item style-underline" onclick="insertEffect('[下划线开始]', '[下划线结束]')">下划线</div>
-          <div class="effect-item style-italic" onclick="insertEffect('[斜体开始]', '[斜体结束]')">斜体</div>
-          <div class="effect-item style-bold" onclick="insertEffect('[粗体开始]', '[粗体结束]')">粗体</div>
-          <div class="effect-item style-magic" onclick="insertEffect('[洗脑魔法开始]', '[洗脑魔法结束]')">洗脑魔法</div>
+          <div class="effect-item style-strike"    data-start="[删除线开始]"   data-end="[删除线结束]">删除线</div>
+          <div class="effect-item style-underline" data-start="[下划线开始]"   data-end="[下划线结束]">下划线</div>
+          <div class="effect-item style-italic"    data-start="[斜体开始]"     data-end="[斜体结束]">斜体字</div>
+          <div class="effect-item style-bold"      data-start="[粗体开始]"     data-end="[粗体结束]">粗体字</div>
+          <div class="effect-item style-magic"     data-start="[洗脑魔法开始]" data-end="[洗脑魔法结束]">洗脑魔法</div>
+          <div class="effect-item style-shadow"    data-start="[阴影开始]"     data-end="[阴影结束]">文字阴影</div>
+          <div class="effect-item style-gradient"  data-start="[渐变开始]"     data-end="[渐变结束]">彩虹渐变</div>
+          <div class="effect-item style-outline"   data-start="[描边开始]"     data-end="[描边结束]">文字描边</div>
+          <div class="effect-item" data-start="[左右镜像开始]" data-end="[左右镜像结束]">↔ 左右镜像</div>
+          <div class="effect-item" data-start="[上下镜像开始]" data-end="[上下镜像结束]">↕ 上下镜像</div>
+        </div>
+      </div>
+
+      <div class="effect-section">
+        <div class="effect-section-title">🔃 文字旋转角度</div>
+        <div class="effect-grid">
+          <div class="effect-item" data-param-type="旋转" data-param-default="45">🔃 设置旋转角度</div>
+        </div>
+      </div>
+
+      <div class="effect-section">
+        <div class="effect-section-title">↔ 文字偏移</div>
+        <div class="effect-grid">
+          <div class="effect-item" data-param-type="偏移" data-param-default="20">↔ 设置文字偏移</div>
+        </div>
+      </div>
+
+      <div class="effect-section">
+        <div class="effect-section-title">🔡 字体大小 / 字体粗细</div>
+        <div class="effect-grid">
+          <div class="effect-item" data-param-type="文字大小" data-param-default="32">设置字体大小</div>
+          <div class="effect-item" data-param-type="文字粗细" data-param-default="700">设置字体粗细</div>
+        </div>
+        <div class="effect-help-note">
+          💡 <strong>字体大小和字体粗细的参数说明</strong>：<br>
+          · 字体大小建议 <code class="inline-code">10</code> ~ <code class="inline-code">120</code>，数字越大字越大<br>
+          · 字体粗细范围 <code class="inline-code">100</code>（最细）~ <code class="inline-code">900</code>（最粗），通常用 100 的倍数
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="effect-modal" id="paramModal">
+    <div class="effect-content param-effect-content">
+      <div class="effect-header">
+        <span class="effect-title" id="paramModalTitle">设置参数</span>
+        <button class="effect-close" id="paramModalClose">×</button>
+      </div>
+
+      <div class="param-field">
+        <div class="param-label">已选文字</div>
+        <div id="paramSelectedText" class="param-selected-text"></div>
+      </div>
+
+      <div id="paramDirectionGroup" class="param-direction-group initially-hidden">
+        <div id="paramDirectionLabel" class="param-label param-direction-label"></div>
+        <div id="paramDirectionBtns" class="param-direction-buttons"></div>
+      </div>
+
+      <div class="param-value-field">
+        <label id="paramInputLabel" class="param-label"></label>
+        <input id="paramInputValue" class="param-number-input" type="number" />
+        <div id="paramInputHint" class="param-hint"></div>
+      </div>
+
+      <div class="param-actions">
+        <button class="btn" id="paramModalCancel">取消</button>
+        <button class="btn param-confirm" id="paramModalConfirm">确认应用</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="effect-modal" id="presetModal">
+    <div class="effect-content">
+      <div class="effect-header">
+        <span class="effect-title">📋 快捷预设文字</span>
+        <button class="effect-close" id="presetClose">×</button>
+      </div>
+      <div class="preset-help">
+        💡 点击预设会将文字<strong>追加</strong>到现有内容后面
+      </div>
+      <div class="preset-grid" id="presetGrid">
+      </div>
+    </div>
+  </div>
+
+  <div class="changelog-modal" id="changelogModal">
+    <div class="changelog-content">
+      <div class="changelog-header">
+        <span class="changelog-title">📝 更新日志</span>
+        <button class="changelog-close" id="changelogClose">×</button>
+      </div>
+
+      <div class="changelog-version">
+        <div class="changelog-version-title">V2.0 正式版 · 2026.8.16</div>
+        <ul>
+          <li>新增智能图层、多文字图层与八点自由变换</li>
+          <li>支持鼠标、触摸和数位笔拖动、缩放、拉伸与旋转</li>
+          <li>新增压感绘画模式：钢笔、马克笔、橡皮擦、撤销与清空</li>
+          <li>完整保存图层、图片、笔迹、字体、滤镜与工作区状态</li>
+          <li>新增图层锁定、居中、重置变换及工程导入/导出</li>
+          <li>优化字体加载、滤镜缓存、文字测量和素材保存性能</li>
+        </ul>
+      </div>
+
+      <div class="changelog-version">
+        <div class="changelog-version-title">V1.4Beta · 2026.3.10</div>
+        <ul>
+          <li>新增文字旋转角度标签 [旋转=角度开始]，支持任意角度顺/逆时针旋转</li>
+          <li>镜像标签拆分为 [左右镜像开始] 和 [上下镜像开始]，方向更清晰</li>
+          <li>新增 Emoji 字体加载完成检测机制，确保首次渲染时 Emoji 正确显示</li>
+        </ul>
+      </div>
+
+      <div class="changelog-version">
+        <div class="changelog-version-title">V1.4Beta · 2026.3.10</div>
+        <ul>
+          <li>快捷预设文字</li>
+          <li>图片滤镜</li>
+          <li>保存图片/复制剪贴板按钮统一大小</li>
+          <li>增加字体大小/粗细标签标签,由B站@残玥の交响曲提出</li>
+          <li>新增更新日志入口</li>
+          <li>优化移动端按钮尺寸和排布</li>
+          <li>新增可爱手写字体：站酷快乐体、马善政毛笔楷体、龙藏体、知芒行、流墨毛草、站酷小薇体</li>
+          <li>字体选择增加分组和实时预览</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="paint-modal" id="paintModal" role="dialog" aria-modal="true" aria-label="全屏绘画模式">
+    <div class="paint-orientation-notice" id="paintOrientationNotice" aria-live="polite">
+      <strong>↻ 请将手机竖直</strong>
+      <span>绘画模式使用竖屏全屏，画板会更完整。</span>
+    </div>
+    <div class="paint-topbar">
+      <div class="paint-title">✏️ 绘画模式</div>
+      <div class="paint-status" id="paintStatus">鼠标、触摸与数位笔均可使用</div>
+      <div class="pressure-pill" id="pressurePill"><span class="pressure-dot"></span><span id="pressureText">等待数位笔</span></div>
+      <button class="paint-icon-btn paint-toolbar-toggle" id="paintToolbarToggleBtn" type="button" aria-expanded="true" aria-controls="paintToolbar">⌄ 收起工具栏</button>
+      <button class="paint-finish" id="paintFinishBtn" type="button">完成</button>
+    </div>
+    <div class="paint-stage" id="paintStage">
+      <div class="paint-canvas-stack" id="paintCanvasStack">
+        <canvas id="paintBackground" width="541" height="648" aria-hidden="true"></canvas>
+        <canvas id="paintCanvas" width="541" height="648" aria-label="绘画画布"></canvas>
+      </div>
+    </div>
+    <div class="paint-bottombar" id="paintToolbar">
+      <div class="paint-control-group paint-primary-controls" aria-label="画笔工具">
+        <button class="paint-tool active" data-paint-tool="pen" type="button">钢笔</button>
+        <button class="paint-tool" data-paint-tool="marker" type="button">马克笔</button>
+        <button class="paint-tool" data-paint-tool="eraser" type="button">橡皮擦</button>
+        <label class="paint-control" title="笔刷颜色"><span>颜色</span><input id="paintColor" type="color" value="#e74c3c"></label>
+        <label class="paint-control"><span>大小</span><input id="paintSize" type="range" min="1" max="64" value="10"><b id="paintSizeValue">10</b></label>
+        <label class="paint-control"><span>浓度</span><input id="paintOpacity" type="range" min="5" max="100" value="100"><b id="paintOpacityValue">100%</b></label>
+      </div>
+      <div class="paint-control-group paint-edit-controls" aria-label="绘画操作">
+        <button class="paint-icon-btn" id="paintUndoBtn" type="button" disabled>↩ 撤销</button>
+        <button class="paint-icon-btn" id="paintRedoBtn" type="button" disabled>↪ 重做</button>
+        <button class="paint-icon-btn" id="paintClearBtn" type="button">清空</button>
+        <span class="paint-toolbar-divider" aria-hidden="true"></span>
+        <button class="paint-icon-btn paint-view-toggle" id="paintBoardOnlyBtn" type="button" aria-pressed="false">▣ 仅显示安安的画板</button>
+      </div>
+      <div class="paint-zoom-controls show" id="paintZoomControls" aria-label="画布视图调整">
+        <div class="paint-view-group paint-zoom-group">
+          <button class="paint-icon-btn" id="paintPanBtn" type="button" aria-pressed="false">✋ 移动画布</button>
+          <button class="paint-icon-btn paint-zoom-step" id="paintZoomOutBtn" type="button" aria-label="缩小画布">−</button>
+          <label class="paint-control paint-zoom-control"><span>缩放</span><input id="paintZoom" type="range" min="40" max="400" step="5" value="100"><b id="paintZoomValue">100%</b></label>
+          <button class="paint-icon-btn paint-zoom-step" id="paintZoomInBtn" type="button" aria-label="放大画布">＋</button>
+        </div>
+        <div class="paint-view-group paint-rotate-group">
+          <button class="paint-icon-btn paint-zoom-step" id="paintRotateLeftBtn" type="button" aria-label="向左旋转画布">↶</button>
+          <label class="paint-control paint-rotate-control"><span>旋转</span><input id="paintRotation" type="range" min="-180" max="180" step="1" value="0"><b id="paintRotationValue">0°</b></label>
+          <button class="paint-icon-btn paint-zoom-step" id="paintRotateRightBtn" type="button" aria-label="向右旋转画布">↷</button>
+          <button class="paint-icon-btn" id="paintFitBtn" type="button">适应窗口</button>
+          <button class="paint-icon-btn" id="paintResetViewBtn" type="button">角度归零</button>
         </div>
       </div>
     </div>
   </div>
-  <div style="text-align: center; padding: 15px; color: #fff; font-size: 12px; line-height: 1.8; margin-top: 10px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);"> 此网页发布于GitHub<a href="https://github.com/YuXia-Net/anan-sketchbook-picture-generator" target="_blank" style="color: #fff; text-decoration: underline; font-weight: bold;">项目链接</a>感谢项目：<a
-      href="https://github.com/MarkCup-Official/Anan-s-Sketchbook-Chat-Box" target="_blank" style="color: #fff; text-decoration: underline;">Anan-s-Sketchbook-Chat-Box</a><br> 网页版本 V1.1，背景来自游戏：梦灯花 </div>
-  <script>
-    // ============================================
-    // 全局变量定义
-    // ============================================
-    
-    /*主画布元素*/
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
-    const images = { base: new Image(), hand: new Image() };
-    let customImageData = null;
-    let customFontName = '';
-    let currentEmotion = '开心.png';
-    let isCustomEmotion = false;
-    let isDrawing = false;
-    
-    /**
-     * 颜色名称到十六进制的映射表
-     * 用于解析 [颜色开始] 标签
-     */
-    const colorMap = {
-        '红色': '#e74c3c', '橙色': '#e67e22', '黄色': '#f1c40f', '绿色': '#2ecc71',
-        '青色': '#1abc9c', '蓝色': '#3498db', '紫色': '#9b59b6', '粉色': '#fd79a8',
-        '灰色': '#7f8c8d', '黑色': '#2c3e50', '白色': '#ecf0f1', '棕色': '#8b4513'
-    };
-    
-    /**
-     * 画板区域坐标定义
-     * 白色画板在画布中的位置和尺寸
-     */
-    const canvasBoard = {
-        left: 93,      // 画板左边界
-        right: 425,    // 画板右边界
-        top: 430,      // 画板上边界
-        bottom: 665,   // 画板下边界
-        get width() { return this.right - this.left; },
-        get height() { return this.bottom - this.top; }
-    };
-    
-    // ============================================
-    // 图片加载与表情切换
-    // ============================================
-    
-    /**
-     * 初始化默认图片资源
-     * 加载开心表情和手部 overlay，等待两张都加载完成后绘制
-     */
-    function initImages() {
-        let loaded = 0;
-        const onLoad = () => { loaded++; if (loaded >= 2) drawCanvas(); };
-        images.base.onload = onLoad;
-        images.hand.onload = onLoad;
-        images.base.onerror = onLoad;
-        images.hand.onerror = onLoad;
-        images.base.src = 'anans/开心.png';
-        images.hand.src = 'anans/AnAn2.png';
-    }
-    
-    /**
-     * 切换表情图片
-     */
-    function changeEmotion(filename) {
-        // 处理自定义表情选择
-        if (filename === 'custom') {
-            document.getElementById('customEmotionInput').click();
-            // 恢复select显示为当前实际使用的表情
-            document.getElementById('emotionSelect').value = isCustomEmotion ? 'custom' : currentEmotion;
-            return;
-        }
-        
-        isCustomEmotion = false;
-        currentEmotion = filename;
-        const img = new Image();
-        img.onload = () => { images.base = img; drawCanvas(); };
-        img.onerror = drawCanvas;
-        img.src = 'anans/' + filename;
-    }
-    
-    /**
-     * 处理用户上传的自定义表情图片
-     */
-    function handleCustomEmotion(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            const img = new Image();
-            img.onload = () => {
-                // 设置自定义表情图片
-                images.base = img;
-                isCustomEmotion = true;
-                
-                // 在select中添加/更新自定义选项
-                const select = document.getElementById('emotionSelect');
-                select.querySelector('option[value^="custom_"]')?.remove();
-                
-                const opt = document.createElement('option');
-                opt.value = 'custom';
-                // 截断长文件名显示
-                opt.text = '📷 ' + file.name.substring(0, 20) + (file.name.length > 20 ? '...' : '');
-                opt.selected = true;
-                select.insertBefore(opt, select.lastChild);
-                
-                drawCanvas();
-            };
-            img.onerror = () => {
-                alert('图片加载失败，请尝试其他图片');
-                document.getElementById('emotionSelect').value = isCustomEmotion ? 'custom' : currentEmotion;
-            };
-            img.src = ev.target.result;
-        };
-        reader.readAsDataURL(file);
-    }
-    
-    // ============================================
-    // 自定义画板图片功能
-    // ============================================
-    
-    /**
-     * 处理用户上传的画板图片
-     */
-    function handleCustomImage(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            const img = new Image();
-            img.onload = () => {
-                // 存储画板图片数据
-                customImageData = {
-                    image: img,
-                    name: file.name,
-                    align: document.getElementById('imageAlign').value,
-                    zoom: 100
-                };
-                // 更新UI显示
-                document.getElementById('imagePreviewName').textContent = file.name;
-                document.getElementById('removeImageBtn').style.display = 'inline-block';
-                document.getElementById('zoomControl').style.display = 'block';
-                drawCanvas();
-            };
-            img.src = ev.target.result;
-        };
-        reader.readAsDataURL(file);
-    }
-    
-    /** 移除自定义画板图片 */
-    function removeCustomImage() {
-        customImageData = null;
-        document.getElementById('customImageInput').value = '';
-        document.getElementById('imagePreviewName').textContent = '未添加图片';
-        document.getElementById('removeImageBtn').style.display = 'none';
-        document.getElementById('zoomControl').style.display = 'none';
-        drawCanvas();
-    }
-    
-    /** 更新画板图片对齐方式 */
-    function updateImageAlign() {
-        if (customImageData) {
-            customImageData.align = document.getElementById('imageAlign').value;
-            drawCanvas();
-        }
-    }
-    
-    /**
-     * 更新画板图片缩放比例
-     */
-    function updateZoom(value) {
-        if (customImageData) {
-            customImageData.zoom = parseInt(value);
-            document.getElementById('zoomValue').textContent = value + '%';
-            drawCanvas();
-        }
-    }
-    
-    /**
-     * 计算画板图片在画布中的绘制位置和尺寸
-     */
-    function calculateImageLayout() {
-        if (!customImageData) return null;
-        
-        const maxW = canvasBoard.width - 20;
-        const maxH = canvasBoard.height - 20;
-        const img = customImageData.image;
-        const zoom = customImageData.zoom || 100;
-        
-        // 计算自适应缩放比例，保持宽高比，不超过画板区域
-        const scale = Math.min(maxW / img.width, maxH / img.height, 1) * (zoom / 100);
-        const w = img.width * scale;
-        const h = img.height * scale;
-        
-        // 根据对齐方式计算x坐标
-        let x = canvasBoard.left + 10;
-        if (customImageData.align === 'center') {
-            x = canvasBoard.left + (canvasBoard.width - w) / 2;
-        } else if (customImageData.align === 'right') {
-            x = canvasBoard.right - 10 - w;
-        }
-        
-        // bottom + 35 是图片底部到文字顶部的间距，防止重叠
-        return {
-            x: x,
-            y: canvasBoard.top + 10,
-            width: w,
-            height: h,
-            bottom: canvasBoard.top + 10 + h + 35,
-            scale: scale
-        };
-    }
-    
-    // ============================================
-    // 文字效果处理
-    // ============================================
-    
-    /** 自动调整textarea高度 */
-    function autoResizeTextarea(t) {
-        t.style.height = 'auto';
-        t.style.height = Math.min(Math.max(t.scrollHeight, 60), 120) + 'px';
-        drawCanvas();
-    }
-    
-    /** 打开/关闭效果选择弹窗 */
-    function openEffectModal() { document.getElementById('effectModal').classList.add('show'); }
-    function closeEffectModal(e) { 
-        if (!e || e.target.id === 'effectModal') document.getElementById('effectModal').classList.remove('show'); 
-    }
-    
-    /**
-     * 在textarea光标位置插入效果标签
-     */
-    function insertEffect(start, end) {
-        const t = document.getElementById('textInput');
-        const s = t.selectionStart, e = t.selectionEnd, v = t.value;
-        t.value = v.substring(0, s) + start + v.substring(s, e) + end + v.substring(e);
-        t.focus();
-        t.setSelectionRange(s + start.length, s + start.length);
-        autoResizeTextarea(t);
-        closeEffectModal();
-    }
-    
-    /**
-     * 预处理洗脑魔法效果添加「」包裹
-     */
-    function preprocessMagic(t) { 
-        return t.replace(/\[洗脑魔法开始\]([\s\S]*?)\[洗脑魔法结束\]/g, '[洗脑魔法开始]「$1」[洗脑魔法结束]'); 
-    }
-    
-    /**
-     * 解析带样式标签的文本，生成字符级样式数据
-     */
-    function parseStyledText(t) {
-        t = preprocessMagic(t);
-        
-        // 提取所有标签
-        const tagRe = /\[(红色|橙色|黄色|绿色|青色|蓝色|紫色|粉色|灰色|黑色|白色|棕色|删除线|下划线|斜体|粗体|洗脑魔法)(开始|结束)\]/g;
-        const tags = [];
-        let m;
-        while ((m = tagRe.exec(t)) !== null) {
-            tags.push({ index: m.index, name: m[1], type: m[2], len: m[0].length });
-        }
-        tags.sort((a, b) => a.index - b.index);
-        
-        // 构建样式区间
-        const intervals = [];
-        const styles = { color: null, strike: false, underline: false, italic: false, bold: false };
-        const stack = [];
-        let pos = 0;
-        
-        for (const tag of tags) {
-            if (tag.index > pos) intervals.push({ start: pos, end: tag.index, styles: { ...styles } });
-            
-            if (tag.type === '开始') {
-                // 保存当前状态到栈
-                stack.push({ name: tag.name, styles: { ...styles } });
-                // 应用新样式
-                if (colorMap[tag.name]) styles.color = colorMap[tag.name];
-                else if (tag.name === '删除线') styles.strike = true;
-                else if (tag.name === '下划线') styles.underline = true;
-                else if (tag.name === '斜体') styles.italic = true;
-                else if (tag.name === '粗体') styles.bold = true;
-                else if (tag.name === '洗脑魔法') styles.color = '#9b59b6';
-            } else {
-                // 结束标签：恢复之前的状态
-                const i = stack.findIndex(x => x.name === tag.name);
-                if (i !== -1) { Object.assign(styles, stack[i].styles); stack.splice(i, 1); }
-            }
-            pos = tag.index + tag.len;
-        }
-        if (pos < t.length) intervals.push({ start: pos, end: t.length, styles: { ...styles } });
-        
-        // 展开为字符数组
-        const result = [];
-        for (const int of intervals) {
-            for (const c of Array.from(t.substring(int.start, int.end))) {
-                result.push({ char: c, ...int.styles });
-            }
-        }
-        return result;
-    }
-    
-    // ============================================
-    // 文本渲染
-    // ============================================
-    /***/
-    function renderTextLines(chars, maxW, fontSize, fontFamily, defaultColor, align, startY, lineHeight, imgBottom) {
-        // 文字起始Y坐标：如果有画板图片，从图片底部开始；否则从startY开始
-        const textY = (imgBottom || startY) + 10;
-        
-        // 预计算每个字符的字体和宽度
-        const processed = chars.map(c => {
-            const style = c.italic ? 'italic' : 'normal';
-            const weight = c.bold ? 'bold' : 'normal';
-            ctx.font = `${style} ${weight} ${fontSize}px ${fontFamily}`;
-            return { ...c, font: ctx.font, width: ctx.measureText(c.char).width };
-        });
-        
-        // 分行处理
-        const lines = [];
-        let line = [], lineW = 0;
-        for (const c of processed) {
-            if (c.char === '\n') {
-                if (line.length) { lines.push(line); line = []; lineW = 0; }
-                continue;
-            }
-            // 自动换行
-            if (lineW + c.width > maxW && line.length) {
-                lines.push(line);
-                line = [c];
-                lineW = c.width;
-            } else {
-                line.push(c);
-                lineW += c.width;
-            }
-        }
-        if (line.length) lines.push(line);
-        if (!lines.length) lines.push([]);
-        
-        // 计算基线位置参数
-        ctx.font = `normal ${fontSize}px ${fontFamily}`;
-        const ascent = ctx.measureText('M').actualBoundingBoxAscent || fontSize * 0.8;
-        const descent = ctx.measureText('M').actualBoundingBoxDescent || fontSize * 0.2;
-        const textH = ascent + descent;
-        
-        // 逐行绘制
-        for (let i = 0; i < lines.length; i++) {
-            const lineY = textY + i * lineHeight;
-            if (lineY > canvasBoard.bottom + 20) break; // 超出画板底部停止绘制
-            
-            const lineW = lines[i].reduce((a, c) => a + c.width, 0);
-            // 计算行起始X坐标
-            let x = canvasBoard.left;
-            if (align === 'center') x = canvasBoard.left + (canvasBoard.width - lineW) / 2;
-            else if (align === 'right') x = canvasBoard.right - lineW;
-            
-            // 收集删除线和下划线的连续区间
-            const strikes = [], underlines = [];
-            let curX = x, strikeStart = null, underStart = null;
-            for (let j = 0; j < lines[i].length; j++) {
-                const c = lines[i][j];
-                if (c.strike && strikeStart === null) strikeStart = curX;
-                else if (!c.strike && strikeStart !== null) { 
-                    strikes.push({ s: strikeStart, e: curX, color: lines[i][j-1].color }); 
-                    strikeStart = null; 
-                }
-                if (c.underline && underStart === null) underStart = curX;
-                else if (!c.underline && underStart !== null) { 
-                    underlines.push({ s: underStart, e: curX, color: lines[i][j-1].color }); 
-                    underStart = null; 
-                }
-                curX += c.width;
-            }
-            // 处理行尾未闭合的样式
-            if (strikeStart !== null) strikes.push({ s: strikeStart, e: curX, color: lines[i][lines[i].length-1].color });
-            if (underStart !== null) underlines.push({ s: underStart, e: curX, color: lines[i][lines[i].length-1].color });
-            
-            // 绘制文字
-            curX = x;
-            for (const c of lines[i]) {
-                ctx.font = c.font;
-                ctx.fillStyle = c.color || defaultColor;
-                ctx.fillText(c.char, curX, lineY);
-                curX += c.width;
-            }
-            
-            // 绘制删除线和下划线
-            ctx.save();
-            ctx.lineWidth = Math.max(1, fontSize * 0.08);
-            const strikeY = lineY - (ascent - textH * 0.5);
-            for (const s of strikes) {
-                ctx.beginPath();
-                ctx.strokeStyle = s.color || defaultColor;
-                ctx.moveTo(s.s, strikeY);
-                ctx.lineTo(s.e, strikeY);
-                ctx.stroke();
-            }
-            const underY = lineY + descent * 0.8;
-            for (const u of underlines) {
-                ctx.beginPath();
-                ctx.strokeStyle = u.color || defaultColor;
-                ctx.moveTo(u.s, underY);
-                ctx.lineTo(u.e, underY);
-                ctx.stroke();
-            }
-            ctx.restore();
-        }
-        return lines.length;
-    }
-    
-    // ============================================
-    // 主绘制逻辑
-    // ============================================
-    
-    /**
-     * 主绘制函数
-     */
-    function drawCanvas() {
-        if (isDrawing) return;
-        isDrawing = true;
-        
-        // 等待底图加载完成
-        if ((!images.base.complete || !images.base.naturalWidth) && images.base.src) {
-            isDrawing = false;
-            setTimeout(drawCanvas, 50);
-            return;
-        }
-        
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        // 1. 绘制表情底图
-        if (images.base.complete && images.base.naturalWidth) {
-            ctx.drawImage(images.base, 0, 0, canvas.width, canvas.height);
-        } else {
-            // 加载中占位
-            ctx.fillStyle = '#f5f5f5';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#999';
-            ctx.textAlign = 'center';
-            ctx.fillText('加载中...', canvas.width/2, canvas.height/2);
-        }
-        
-        // 2. 绘制自定义画板图片（如果有）
-        let imgBottom = null;
-        if (customImageData) {
-            const layout = calculateImageLayout();
-            if (layout) {
-                ctx.drawImage(customImageData.image, layout.x, layout.y, layout.width, layout.height);
-                imgBottom = layout.bottom;
-            }
-        }
-        
-        // 3. 获取绘制参数
-        const fontSize = parseInt(document.getElementById('fontSize').value) || 32;
-        let fontFamily = document.getElementById('fontFamily').value;
-        if (fontFamily === 'custom') fontFamily = "'Noto Sans SC', 'Noto Color Emoji', sans-serif";
-        const color = document.getElementById('fontColor').value;
-        const align = document.getElementById('textAlign').value;
-        const startY = parseInt(document.getElementById('posY').value) || 466;
-        const lineHeight = fontSize * (parseFloat(document.getElementById('lineHeight').value) || 1.2);
-        
-        // 4. 解析并绘制文字
-        const text = document.getElementById('textInput').value || '';
-        const chars = parseStyledText(text);
-        const maxW = canvasBoard.width - 20;
-        const lines = renderTextLines(chars, maxW, fontSize, fontFamily, color, align, startY, lineHeight, imgBottom);
-        
-        // 5. 检查文字是否超出画板
-        const endY = (imgBottom || startY) + lines * lineHeight;
-        document.getElementById('overflowWarning').classList.toggle('show', endY > 650);
-        
-        if (!customImageData && !isCustomEmotion && images.hand.complete && images.hand.naturalWidth) {
-           ctx.drawImage(images.hand, 0, 0, canvas.width, canvas.height);
-         }
-        
-        isDrawing = false;
-    }
-    
-    // ============================================
-    // 下载功能
-    // ============================================
-    
-    /** 生成并下载合成后的图片 */
-    function downloadImage() {
-        document.getElementById('loading').style.display = 'block';
-        setTimeout(() => {
-            const link = document.createElement('a');
-            link.download = '[anan.xia.kim]夏目安安_' + currentEmotion.replace('.png', '') + '_' + Date.now() + '.png';
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-            document.getElementById('loading').style.display = 'none';
-        }, 100);
-    }
-    
-    // ============================================
-    // 复制到剪贴板功能
-    // ============================================
-    
-    /**
-     * 将Canvas内容复制到系统剪贴板
-     * 使用Clipboard API写入PNG格式的图片数据
-     */
-    async function copyToClipboard() {
-        const copyBtn = document.getElementById('copyBtn');
-        const originalText = copyBtn.innerHTML;
-        
-        // 检查浏览器是否支持Clipboard API
-        if (!navigator.clipboard || !navigator.clipboard.write) {
-            showCopyFeedback(copyBtn, 'error', '❌ 浏览器不支持');
-            return;
-        }
-    
-        try {
-            // 显示加载状态
-            copyBtn.disabled = true;
-            copyBtn.innerHTML = '<span class="spinner" style="width: 14px; height: 14px; border-width: 2px; margin: 0;"></span> 复制中...';
-    
-            // 将Canvas转换为Blob（PNG格式）
-            const blob = await new Promise((resolve) => {
-                canvas.toBlob(resolve, 'image/png');
-            });
-    
-            if (!blob) {
-                throw new Error('Canvas转换失败');
-            }
-    
-            // 创建ClipboardItem并写入剪贴板
-            const item = new ClipboardItem({ 'image/png': blob });
-            await navigator.clipboard.write([item]);
-    
-            // 显示成功反馈
-            showCopyFeedback(copyBtn, 'success', '✅ 已复制!可直接粘贴到聊天软件');
-            
-        } catch (err) {
-            console.error('复制失败:', err);
-            // 区分权限错误和其他错误
-            if (err.name === 'NotAllowedError' || err.name === 'SecurityError') {
-                showCopyFeedback(copyBtn, 'error', '❌ 需要权限');
-            } else {
-                showCopyFeedback(copyBtn, 'error', '❌ 复制失败');
-            }
-        } finally {
-            copyBtn.disabled = false;
-            // 2秒后恢复原始状态
-            setTimeout(() => {
-                copyBtn.classList.remove('success', 'error');
-                copyBtn.innerHTML = originalText;
-            }, 2000);
-        }
-    }
-    
-    /*
-     * 显示复制操作的视觉反馈
-     */
-    function showCopyFeedback(btn, type, text) {
-        btn.classList.remove('success', 'error');
-        btn.classList.add(type);
-        btn.innerHTML = text;
-    }
-    
-    // ============================================
-    // 事件绑定
-    // ============================================
-    
-    // 文本输入
-    document.getElementById('textInput').addEventListener('input', function() { autoResizeTextarea(this); });
-    
-    // 字体和样式控制
-    document.getElementById('fontFamily').addEventListener('change', drawCanvas);
-    document.getElementById('fontSize').addEventListener('input', drawCanvas);
-    document.getElementById('fontColor').addEventListener('input', drawCanvas);
-    document.getElementById('textAlign').addEventListener('change', drawCanvas);
-    document.getElementById('posY').addEventListener('input', function() { 
-        document.getElementById('previewPosYValue').textContent = this.value; 
-        drawCanvas(); 
-    });
-    document.getElementById('lineHeight').addEventListener('input', drawCanvas);
-    
-    // 自定义字体上传
-    document.getElementById('fontFamily').addEventListener('change', function(e) {
-        if (e.target.value === 'custom') document.getElementById('customFontInput').click();
-    });
-    document.getElementById('customFontInput').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            const name = 'CustomFont_' + Date.now();
-            new FontFace(name, ev.target.result).load().then((f) => {
-                document.fonts.add(f);
-                const opt = document.createElement('option');
-                opt.value = name + ", 'Noto Color Emoji', sans-serif";
-                opt.text = '📝 ' + file.name;
-                opt.selected = true;
-                this.insertBefore(opt, this.lastChild);
-                drawCanvas();
-            }).catch(() => { 
-                alert('字体加载失败'); 
-                this.value = "'Noto Sans SC', 'Noto Color Emoji', sans-serif"; 
-            });
-        };
-        reader.readAsArrayBuffer(file);
-    });
-    
-    // ============================================
-    // 初始化
-    // ============================================
-    
-    window.onload = () => { 
-        initImages(); 
-        autoResizeTextarea(document.getElementById('textInput'));
-        
-        // 检测移动平台显示提示
-        if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-            document.getElementById('mobileWarning').style.display = 'block';
-        }
-    };
-  </script>
+
+  <div class="update-modal" id="updateModal" role="dialog" aria-modal="true" aria-labelledby="updateTitle">
+    <div class="update-card">
+      <div class="update-demo" aria-hidden="true">
+        <div class="demo-board"><span class="demo-face">😺</span><span class="demo-stroke"></span><span class="demo-text"></span></div>
+        <div class="demo-layer-card l1">👁 文字图层</div>
+        <div class="demo-layer-card l2">👁 绘画图层</div>
+        <div class="demo-layer-card l3">👁 角色底图</div>
+      </div>
+      <div class="update-body">
+        <span class="update-kicker">ANAN STUDIO V2.0</span>
+        <h2 class="update-title" id="updateTitle">简单一点，自由很多。</h2>
+        <p class="update-subtitle">这次把创作自由度往前推了一大步，但依然保持原来的简单手感。</p>
+        <div class="update-features">
+          <div class="update-feature"><strong>✥ 智能图层</strong>图层，笔记自由变化<br>提供类PS的体验</div>
+          <div class="update-feature"><strong>✏️ 绘画模式</strong>简易绘画工具，支援数位笔<br>支持压感</div>
+          <div class="update-feature"><strong>📦 工程备份</strong>随时导出与导入继续创作</div>
+        </div>
+        <div class="update-actions">
+          <button class="update-later" id="updateLaterBtn" type="button">稍后再看</button>
+          <button class="update-start" id="updateStartBtn" type="button">开始继续创作</button>
+          <a class="update-tool-link" href="https://yu.xia.kim/33" target="_blank" rel="noopener noreferrer">✨ 新工具，魔女语翻译器！点我前往</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="install-banner" id="installBanner">
+    <div class="install-banner-inner">
+      <div class="install-banner-icon">🎨</div>
+      <div class="install-banner-text">
+        <div class="install-banner-title">想把安安表情包生成器添加到桌面吗？</div>
+        <div class="install-banner-desc">像 App 一样随时打开，方便又快捷！</div>
+      </div>
+      <div class="install-banner-actions">
+        <button class="install-btn-primary" id="installBtn">📲 添加到桌面</button>
+        <button class="install-btn-dismiss" id="installDismiss">以后再说</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="ios-install-modal" id="iosInstallModal">
+    <div class="ios-install-content">
+      <div class="ios-install-title">📲 添加到 iPhone / iPad 桌面</div>
+      <ul class="ios-install-steps">
+        <li><div class="ios-step-num">1</div><span>点击底部工具栏中间的 <strong>分享</strong> 按钮（方框加向上箭头的图标）</span></li>
+        <li><div class="ios-step-num">2</div><span>在弹出菜单中向下滑动，找到 <strong>「添加到主屏幕」</strong> 并点击</span></li>
+        <li><div class="ios-step-num">3</div><span>确认名称后，点击右上角 <strong>「添加」</strong> 即可完成！</span></li>
+      </ul>
+      <button class="ios-install-close" id="iosInstallClose">好的，我去试试！</button>
+    </div>
+  </div>
+
+  <div class="site-footer">
+    此网页由<a class="site-footer-link site-footer-link-strong" href="https://xiau.net" target="_blank" rel="noopener noreferrer">夏的博客</a>开发，
+    感谢项目：<a class="site-footer-link" href="https://github.com/MarkCup-Official/Anan-s-Sketchbook-Chat-Box" target="_blank" rel="noopener noreferrer">Anan-s-Sketchbook-Chat-Box</a><br>
+    网页版本 V2.0.2026.8.16，背景来自游戏：梦灯花
+  </div>
+
+<script src="assets/js/app.js?v=20260818-1"></script>
+
+<script defer src="https://analytics.xiau.net/script.js" data-website-id="9d625668-da70-4ea9-b4e8-61748ae67c17"></script>
+
+<script src="assets/js/install.js?v=20260818-1"></script>
+
 </body>
 </html>
